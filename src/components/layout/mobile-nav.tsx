@@ -41,6 +41,7 @@ export function MobileNav({ eventName }: { eventName: string }) {
           <SheetDescription className="sr-only">
             Navegación principal del panel
           </SheetDescription>
+          
         </div>
 
         <SidebarNav onNavigate={() => setOpen(false)} />
