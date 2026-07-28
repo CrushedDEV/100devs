@@ -88,6 +88,16 @@
   --brand: oklch(0.58 0.2 273);
   --brand-foreground: oklch(0.985 0 0);
 
+  /* Engine identity colours, applied to participant names.
+     Only Godot has a real brand colour (its azure blue). Unity and Unreal are
+     monochrome brands, so their hues are picked for mutual separation — a
+     neutral tint would have been indistinguishable from an unset engine.
+     Each theme carries its own lightness so names stay readable on either
+     background. */
+  --engine-unity: oklch(0.55 0.13 65);
+  --engine-unreal: oklch(0.45 0.16 285);
+  --engine-godot: oklch(0.5 0.12 235);
+
   --chart-1: oklch(0.58 0.2 273);
   --chart-2: oklch(0.62 0.15 245);
   --chart-3: oklch(0.62 0.16 152);
@@ -133,6 +143,10 @@
   --info-foreground: oklch(0.16 0.02 245);
   --brand: oklch(0.66 0.18 273);
   --brand-foreground: oklch(0.985 0 0);
+
+  --engine-unity: oklch(0.79 0.13 70);
+  --engine-unreal: oklch(0.76 0.13 285);
+  --engine-godot: oklch(0.73 0.11 235);
 
   --chart-1: oklch(0.66 0.18 273);
   --chart-2: oklch(0.7 0.14 245);

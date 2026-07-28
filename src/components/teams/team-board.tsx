@@ -30,7 +30,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Inbox, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EngineBadge } from "@/components/shared/engine-badge";
+import { EngineName } from "@/components/shared/engine-name";
 import { SkillBadges } from "@/components/shared/skill-badges";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Badge } from "@/components/ui/badge";
@@ -364,10 +364,9 @@ function ParticipantCard({
         avatarUrl={participant.avatarUrl}
         className="size-5"
       />
-      <span className="min-w-0 flex-1 truncate text-[13px]">
+      <EngineName engine={participant.engine} className="min-w-0 flex-1 text-[13px]">
         {participant.name}
-      </span>
-      <EngineBadge engine={participant.engine} size="sm" />
+      </EngineName>
       <SkillBadges skills={participant.skills} max={2} />
       {position !== undefined && (
         <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">

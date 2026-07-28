@@ -24,7 +24,7 @@ import { ExternalLink, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { EngineBadge } from "@/components/shared/engine-badge";
+import { EngineName } from "@/components/shared/engine-name";
 import { SkillBadges } from "@/components/shared/skill-badges";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { UserAvatar } from "@/components/shared/user-avatar";
@@ -154,8 +154,9 @@ function SortableMember({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className="truncate text-sm font-medium">{member.name}</p>
-          <EngineBadge engine={member.engine} />
+          <EngineName engine={member.engine} className="text-sm font-medium">
+            {member.name}
+          </EngineName>
           <SkillBadges skills={member.skills} max={3} />
         </div>
         {member.availability && (

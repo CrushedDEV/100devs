@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EngineBadge } from "@/components/shared/engine-badge";
+import { EngineLegend, EngineName } from "@/components/shared/engine-name";
 import { SkillBadges } from "@/components/shared/skill-badges";
 import {
   ENGINES,
@@ -177,6 +177,8 @@ export function ParticipantsTable({
         </Select>
       </div>
 
+      <EngineLegend />
+
       {filtered.length ? (
         <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
           <Table>
@@ -212,10 +214,12 @@ export function ParticipantsTable({
                         />
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <p className="truncate text-sm font-medium">
+                            <EngineName
+                              engine={participant.engine}
+                              className="text-sm font-medium"
+                            >
                               {participant.name}
-                            </p>
-                            <EngineBadge engine={participant.engine} />
+                            </EngineName>
                             <SkillBadges skills={participant.skills} max={4} />
                           </div>
                           <p className="truncate text-xs text-muted-foreground">
