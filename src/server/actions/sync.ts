@@ -18,10 +18,17 @@ export async function syncDiscordAction(): Promise<ActionState<SyncResult>> {
     revalidatePath("/dashboard");
     revalidatePath("/settings");
 
-    return ok(
-      result,
-      `${result.membersFetched} miembros procesados · ${result.usersCreated} nuevos · ${result.participantsCreated} inscritos.`,
-    );
+    const summary = [
+      `${result.membersFetched} miembros procesados`,
+      `${result.usersCreated} nuevos`,
+      `${result.participantsCreated} inscritos`,
+    ];
+
+    if (result.skillsLinked > 0) {
+      summary.push(`${result.skillsLinked} categorías vinculadas`);
+    }
+
+    return ok(result, `${summary.join(" · ")}.`);
   } catch (error) {
     console.error("[sync]", error);
     return fail(

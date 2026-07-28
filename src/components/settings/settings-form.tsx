@@ -251,8 +251,8 @@ export function SettingsForm({
                       >
                         {skill.label}
                         {isSuggestion && (
-                          <span className="rounded-full bg-info/15 px-1.5 py-0.5 text-[10px] font-medium text-info">
-                            detectado
+                          <span className="rounded-full bg-warning/15 px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                            sin guardar
                           </span>
                         )}
                       </Label>

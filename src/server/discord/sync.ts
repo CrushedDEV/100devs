@@ -2,7 +2,12 @@ import "server-only";
 
 import { and, eq, inArray, notInArray } from "drizzle-orm";
 
-import type { AppRole, SyncTrigger } from "@/lib/constants";
+import {
+  suggestSkillRoles,
+  type AppRole,
+  type SkillRoleMap,
+  type SyncTrigger,
+} from "@/lib/constants";
 import { db } from "@/server/db";
 import {
   participants,
@@ -14,7 +19,12 @@ import { resolveAppRole } from "@/server/auth/roles";
 import { getActiveEvent, updateEventSettings } from "@/server/services/events";
 import { logTimelineEvent } from "@/server/services/timeline";
 
-import { avatarUrl, fetchGuildMembers, type DiscordGuildMember } from "./client";
+import {
+  avatarUrl,
+  fetchGuildMembers,
+  fetchGuildRoles,
+  type DiscordGuildMember,
+} from "./client";
 
 export interface SyncResult {
   runId: string;
@@ -23,6 +33,8 @@ export interface SyncResult {
   usersUpdated: number;
   participantsCreated: number;
   participantsDeactivated: number;
+  /** Categories auto-linked to a Discord role on this run. */
+  skillsLinked: number;
   durationMs: number;
 }
 
@@ -48,6 +60,7 @@ export async function syncDiscordMembers(
     .returning();
 
   try {
+    const skillsLinked = await autoLinkSkillRoles(event.id, event.discordGuildId, settings.skillRoleIds);
     const members = await fetchGuildMembers(event.discordGuildId);
     const relevant = members.filter(
       (member) => member.user && resolveAppRole(member.roles, settings) !== null,
@@ -105,7 +118,7 @@ export async function syncDiscordMembers(
       metadata: { trigger, membersFetched: members.length },
     });
 
-    return toResult(finished, startedAt);
+    return toResult(finished, startedAt, skillsLinked);
   } catch (error) {
     await db
       .update(syncRuns)
@@ -120,7 +133,11 @@ export async function syncDiscordMembers(
   }
 }
 
-function toResult(run: SyncRun, startedAt: number): SyncResult {
+function toResult(
+  run: SyncRun,
+  startedAt: number,
+  skillsLinked: number,
+): SyncResult {
   return {
     runId: run.id,
     membersFetched: run.membersFetched,
@@ -128,8 +145,35 @@ function toResult(run: SyncRun, startedAt: number): SyncResult {
     usersUpdated: run.usersUpdated,
     participantsCreated: run.participantsCreated,
     participantsDeactivated: run.participantsDeactivated,
+    skillsLinked,
     durationMs: Date.now() - startedAt,
   };
+}
+
+/**
+ * Links each skill category to the identically named Discord role the first
+ * time an event is synced.
+ *
+ * Only runs while the mapping is completely empty, so it never overwrites (or
+ * resurrects) a choice the organiser made by hand.
+ */
+async function autoLinkSkillRoles(
+  eventId: string,
+  guildId: string,
+  current: SkillRoleMap,
+): Promise<number> {
+  if (Object.keys(current).length > 0) return 0;
+
+  const roles = await fetchGuildRoles(guildId);
+  const suggestion = suggestSkillRoles(
+    roles.map((role) => ({ id: role.id, name: role.name })),
+  );
+
+  const linked = Object.keys(suggestion).length;
+  if (linked === 0) return 0;
+
+  await updateEventSettings(eventId, { skillRoleIds: suggestion });
+  return linked;
 }
 
 async function upsertUser(
