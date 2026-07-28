@@ -31,6 +31,7 @@ export async function updateSettingsAction(
       defaultShiftMinutes: values.defaultShiftMinutes,
       startsAt: values.startsAt ?? null,
       endsAt: values.endsAt ?? null,
+      discordGuildId: values.discordGuildId,
     });
 
     await updateEventSettings(context.event.id, {

@@ -113,6 +113,35 @@ export function SettingsForm({ event, settings, canEdit }: SettingsFormProps) {
 
         <Card>
           <CardHeader>
+            <CardTitle>Servidor de Discord</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Field
+              label="ID del servidor (guild)"
+              htmlFor="discordGuildId"
+              error={errors?.discordGuildId}
+              hint="Con el modo desarrollador activado en Discord: clic derecho sobre el icono del servidor → Copiar ID del servidor."
+            >
+              <Input
+                id="discordGuildId"
+                name="discordGuildId"
+                defaultValue={event.discordGuildId}
+                placeholder="123456789012345678"
+                required
+              />
+            </Field>
+
+            <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
+              Cambiar este ID hace que la sincronización y el control de acceso
+              pasen a comprobarse contra el nuevo servidor. Los IDs de rol de
+              abajo deben pertenecer a ese mismo servidor, o nadie podrá
+              sincronizarse ni entrar al panel.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Roles de Discord</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

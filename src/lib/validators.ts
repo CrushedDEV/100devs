@@ -168,6 +168,10 @@ export const settingsSchema = z.object({
   defaultShiftMinutes: z.coerce.number().int().min(5).max(24 * 60),
   startsAt: z.coerce.date().nullable().optional(),
   endsAt: z.coerce.date().nullable().optional(),
+  discordGuildId: z
+    .string()
+    .trim()
+    .regex(/^\d{5,25}$/, "ID de servidor de Discord no válido"),
   adminRoleIds: idList,
   moderatorRoleIds: idList,
   participantRoleIds: idList,

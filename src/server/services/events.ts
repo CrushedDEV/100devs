@@ -124,6 +124,7 @@ export async function updateEvent(
       | "endsAt"
       | "timezone"
       | "defaultShiftMinutes"
+      | "discordGuildId"
     >
   >,
 ): Promise<Event> {
