@@ -2,6 +2,7 @@
 
 import { ExternalLink } from "lucide-react";
 
+import { SkillChips } from "@/components/shared/skill-badges";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,14 @@ export function ParticipantSheet({
           <input type="hidden" name="id" value={participant.id} />
 
           <div className="space-y-5 p-4">
+            <div className="space-y-1.5">
+              <Label>Categorías</Label>
+              <SkillChips skills={participant.skills} />
+              <p className="text-xs text-muted-foreground">
+                Se derivan de sus roles de Discord. Se configuran en Ajustes.
+              </p>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Equipo" htmlFor="teamId">
                 <Select

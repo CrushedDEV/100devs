@@ -163,6 +163,105 @@ export const TIMELINE_EVENT_META: Record<
   note_added: { label: "Nota interna", tone: "neutral" },
 };
 
+/* -------------------------------------------------------------------------- */
+/*                            Skills / capabilities                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What a participant can do in the jam. Each one is mapped to a Discord role
+ * from the settings page; a participant's skills are then *derived* from the
+ * roles they hold, so they stay in sync with Discord without extra bookkeeping.
+ *
+ * `aliases` widen the automatic name matching when a server names its roles
+ * slightly differently (e.g. "Programación" instead of "Programador").
+ */
+export const SKILLS = [
+  {
+    key: "music",
+    label: "Música",
+    aliases: ["musica", "music", "compositor", "musico"],
+  },
+  { key: "sfx", label: "SFX", aliases: ["sfx", "efectos", "sonido", "audio"] },
+  {
+    key: "level_design",
+    label: "Diseñador de niveles",
+    aliases: ["disenador de niveles", "diseno de niveles", "level design", "level designer", "niveles"],
+  },
+  {
+    key: "art_2d",
+    label: "Arte 2D",
+    aliases: ["arte 2d", "2d", "artista 2d", "art 2d"],
+  },
+  {
+    key: "art_3d",
+    label: "Arte 3D",
+    aliases: ["arte 3d", "3d", "artista 3d", "art 3d", "modelador"],
+  },
+  {
+    key: "programming",
+    label: "Programador",
+    aliases: ["programador", "programacion", "programmer", "dev", "developer"],
+  },
+  {
+    key: "writing",
+    label: "Guionista",
+    aliases: ["guionista", "guion", "writer", "narrativa"],
+  },
+  {
+    key: "mic",
+    label: "Graba su micro",
+    aliases: ["graba su micro", "graba micro", "micro", "microfono", "mic"],
+  },
+  {
+    key: "webcam",
+    label: "Graba su webcam",
+    aliases: ["graba su webcam", "graba webcam", "webcam", "camara", "facecam"],
+  },
+] as const;
+
+export type SkillKey = (typeof SKILLS)[number]["key"];
+
+export const SKILL_KEYS = SKILLS.map((skill) => skill.key) as SkillKey[];
+
+export const SKILL_LABELS = Object.fromEntries(
+  SKILLS.map((skill) => [skill.key, skill.label]),
+) as Record<SkillKey, string>;
+
+/** Maps a skill key to the Discord role id chosen by the organiser. */
+export type SkillRoleMap = Partial<Record<SkillKey, string>>;
+
+/** Normalises a role name so accents and casing never break the matching. */
+export function normaliseRoleName(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Suggests a skill → role mapping by name, used to pre-fill the settings form
+ * so identically named roles link themselves without manual work.
+ */
+export function suggestSkillRoles(
+  roles: { id: string; name: string }[],
+): SkillRoleMap {
+  const byName = new Map(
+    roles.map((role) => [normaliseRoleName(role.name), role.id]),
+  );
+
+  const suggestion: SkillRoleMap = {};
+
+  for (const skill of SKILLS) {
+    const candidates = [skill.label, ...skill.aliases].map(normaliseRoleName);
+    const match = candidates.find((candidate) => byName.has(candidate));
+    if (match) suggestion[skill.key] = byName.get(match)!;
+  }
+
+  return suggestion;
+}
+
 /** Palette offered when creating teams. */
 export const TEAM_COLORS = [
   "#6366f1",

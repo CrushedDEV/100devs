@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateTime, formatRelative } from "@/lib/format";
 import { requireStaff } from "@/server/auth/guard";
+import { fetchGuildRoles } from "@/server/discord/client";
 import { listSyncRuns } from "@/server/discord/sync";
 import { getActiveEvent } from "@/server/services/events";
 
@@ -17,6 +18,17 @@ export default async function SettingsPage() {
   const session = await requireStaff();
   const { event, settings } = await getActiveEvent();
   const runs = await listSyncRuns(event.id, 8);
+
+  // A misconfigured guild/token must not take the whole settings page down —
+  // the organiser needs this screen precisely to fix that.
+  const guildRoles = await fetchGuildRoles(event.discordGuildId)
+    .then((roles) =>
+      roles
+        .filter((role) => role.name !== "@everyone")
+        .sort((a, b) => b.position - a.position)
+        .map((role) => ({ id: role.id, name: role.name })),
+    )
+    .catch(() => []);
 
   return (
     <>
@@ -31,6 +43,7 @@ export default async function SettingsPage() {
         <SettingsForm
           event={event}
           settings={settings}
+          guildRoles={guildRoles}
           canEdit={session.user.role === "admin"}
         />
 

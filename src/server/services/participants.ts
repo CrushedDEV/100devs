@@ -2,9 +2,14 @@ import "server-only";
 
 import { and, asc, eq, inArray } from "drizzle-orm";
 
-import type { ParticipantStatus } from "@/lib/constants";
+import type {
+  ParticipantStatus,
+  SkillKey,
+  SkillRoleMap,
+} from "@/lib/constants";
 import { db } from "@/server/db";
 import { participants, teams, users } from "@/server/db/schema";
+import { getActiveEvent } from "./events";
 
 export interface ParticipantView {
   id: string;
@@ -20,6 +25,22 @@ export interface ParticipantView {
   internalNotes: string | null;
   discordTicketUrl: string | null;
   team: { id: string; name: string; color: string } | null;
+  /** Derived from the participant's Discord roles, never stored directly. */
+  skills: SkillKey[];
+}
+
+/** Inverts the skill→role map so a role id resolves to its skill in O(1). */
+function skillsFromRoles(
+  discordRoleIds: string[] | null,
+  skillRoleIds: SkillRoleMap,
+): SkillKey[] {
+  if (!discordRoleIds?.length) return [];
+
+  const owned = new Set(discordRoleIds);
+
+  return (Object.entries(skillRoleIds) as [SkillKey, string][])
+    .filter(([, roleId]) => owned.has(roleId))
+    .map(([skill]) => skill);
 }
 
 const selection = {
@@ -36,6 +57,7 @@ const selection = {
   timezone: participants.timezone,
   internalNotes: participants.internalNotes,
   discordTicketUrl: participants.discordTicketUrl,
+  discordRoleIds: users.discordRoleIds,
   teamId: teams.id,
   teamName: teams.name,
   teamColor: teams.color,
@@ -55,12 +77,13 @@ interface ParticipantRow {
   timezone: string | null;
   internalNotes: string | null;
   discordTicketUrl: string | null;
+  discordRoleIds: string[] | null;
   teamId: string | null;
   teamName: string | null;
   teamColor: string | null;
 }
 
-function toView(row: ParticipantRow): ParticipantView {
+function toView(row: ParticipantRow, skillRoleIds: SkillRoleMap): ParticipantView {
   return {
     id: row.id,
     userId: row.userId,
@@ -78,6 +101,7 @@ function toView(row: ParticipantRow): ParticipantView {
       row.teamId && row.teamName && row.teamColor
         ? { id: row.teamId, name: row.teamName, color: row.teamColor }
         : null,
+    skills: skillsFromRoles(row.discordRoleIds, skillRoleIds),
   };
 }
 
@@ -92,7 +116,8 @@ export async function listParticipants(
     .where(eq(participants.eventId, eventId))
     .orderBy(asc(teams.orderIndex), asc(participants.orderIndex), asc(users.username));
 
-  return rows.map(toView);
+  const { settings } = await getActiveEvent();
+  return rows.map((row) => toView(row, settings.skillRoleIds));
 }
 
 export async function getParticipant(
@@ -109,7 +134,10 @@ export async function getParticipant(
     )
     .limit(1);
 
-  return row ? toView(row) : null;
+  if (!row) return null;
+
+  const { settings } = await getActiveEvent();
+  return toView(row, settings.skillRoleIds);
 }
 
 export async function listParticipantsByTeam(
@@ -132,8 +160,10 @@ export async function listParticipantsByTeam(
     )
     .orderBy(asc(participants.orderIndex));
 
+  const { settings } = await getActiveEvent();
+
   for (const row of rows) {
-    const view = toView(row);
+    const view = toView(row, settings.skillRoleIds);
     if (!view.team) continue;
     const bucket = grouped.get(view.team.id) ?? [];
     bucket.push(view);

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CircleCheck, Users, UsersRound } from "lucide-react";
+
 import { SyncButton } from "@/components/layout/sync-button";
 import { ParticipantsTable } from "@/components/participants/participants-table";
 import { PageHeader } from "@/components/shared/page-header";
+import { StatCard } from "@/components/shared/stat-card";
 import { Button } from "@/components/ui/button";
 import { getActiveEvent } from "@/server/services/events";
 import { listParticipants } from "@/server/services/participants";
@@ -25,18 +28,48 @@ export default async function ParticipantsPage({
   ]);
 
   const assigned = participants.filter((p) => p.team).length;
+  const active = participants.filter((p) => p.status === "active").length;
 
   return (
     <>
       <PageHeader
         title="Participantes"
-        description={`${participants.length} sincronizados desde Discord · ${assigned} asignados a un equipo`}
+        description="Sincronizados automáticamente desde Discord."
       >
         <SyncButton variant="full" />
         <Button asChild size="sm" variant="outline">
           <Link href="/teams">Organizar equipos</Link>
         </Button>
       </PageHeader>
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <StatCard
+          label="Participantes totales"
+          value={participants.length}
+          hint="Importados desde Discord"
+          icon={Users}
+          tone="brand"
+        />
+        <StatCard
+          label="Con equipo"
+          value={`${assigned}/${participants.length}`}
+          hint={`${participants.length - assigned} sin asignar`}
+          icon={UsersRound}
+          tone="info"
+          progress={
+            participants.length
+              ? Math.round((assigned / participants.length) * 100)
+              : 0
+          }
+        />
+        <StatCard
+          label="Activos"
+          value={active}
+          hint="Con rol de participante vigente"
+          icon={CircleCheck}
+          tone="success"
+        />
+      </section>
 
       <ParticipantsTable
         participants={participants}

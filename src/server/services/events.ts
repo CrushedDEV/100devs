@@ -97,6 +97,7 @@ export async function updateEventSettings(
       | "reminderOffsets"
       | "remindersEnabled"
       | "autoSyncEnabled"
+      | "skillRoleIds"
       | "ticketUrlTemplate"
       | "driveRootUrl"
       | "lastSyncedAt"

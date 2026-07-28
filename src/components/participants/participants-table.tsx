@@ -22,7 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PARTICIPANT_STATUS_META } from "@/lib/constants";
+import { SkillBadges } from "@/components/shared/skill-badges";
+import { PARTICIPANT_STATUS_META, SKILLS, type SkillKey } from "@/lib/constants";
 import type { ParticipantView } from "@/server/services/participants";
 
 import { ParticipantSheet } from "./participant-sheet";
@@ -44,6 +45,7 @@ export function ParticipantsTable({
   const [query, setQuery] = useState("");
   const [teamFilter, setTeamFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
+  const [skillFilter, setSkillFilter] = useState<string>(ALL);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialParticipantId ?? null,
   );
@@ -71,9 +73,15 @@ export function ParticipantsTable({
       if (statusFilter !== ALL && participant.status !== statusFilter) {
         return false;
       }
+      if (
+        skillFilter !== ALL &&
+        !participant.skills.includes(skillFilter as SkillKey)
+      ) {
+        return false;
+      }
       return true;
     });
-  }, [participants, query, teamFilter, statusFilter]);
+  }, [participants, query, teamFilter, statusFilter, skillFilter]);
 
   const selected = participants.find((p) => p.id === selectedId) ?? null;
 
@@ -119,6 +127,20 @@ export function ParticipantsTable({
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={skillFilter} onValueChange={setSkillFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todas las categorías</SelectItem>
+            {SKILLS.map((skill) => (
+              <SelectItem key={skill.key} value={skill.key}>
+                {skill.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {filtered.length ? (
@@ -155,9 +177,12 @@ export function ParticipantsTable({
                           ringColor={participant.team?.color}
                         />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {participant.name}
-                          </p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="truncate text-sm font-medium">
+                              {participant.name}
+                            </p>
+                            <SkillBadges skills={participant.skills} max={4} />
+                          </div>
                           <p className="truncate text-xs text-muted-foreground">
                             @{participant.username}
                           </p>

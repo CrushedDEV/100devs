@@ -1,0 +1,1 @@
+ALTER TABLE "event_settings" ADD COLUMN "skill_role_ids" jsonb DEFAULT '{}'::jsonb NOT NULL;

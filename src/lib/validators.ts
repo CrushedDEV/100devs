@@ -5,7 +5,9 @@ import {
   EVENT_STATUSES,
   PARTICIPANT_STATUSES,
   SHIFT_STATUSES,
+  SKILL_KEYS,
   TEAM_STATUSES,
+  type SkillKey,
 } from "./constants";
 
 const uuid = z.string().uuid("Identificador no válido");
@@ -186,6 +188,11 @@ export const settingsSchema = z.object({
     ),
   remindersEnabled: z.coerce.boolean(),
   autoSyncEnabled: z.coerce.boolean(),
+  /** Skill key → Discord role id; empty selections are dropped. */
+  skillRoleIds: z.record(
+    z.enum(SKILL_KEYS as [SkillKey, ...SkillKey[]]),
+    z.string().regex(/^\d{5,25}$/, "ID de rol no válido"),
+  ),
   ticketUrlTemplate: optionalText,
   driveRootUrl: optionalUrl,
 });

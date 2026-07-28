@@ -24,6 +24,7 @@ import { ExternalLink, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { SkillBadges } from "@/components/shared/skill-badges";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { PARTICIPANT_STATUS_META } from "@/lib/constants";
@@ -151,7 +152,10 @@ function SortableMember({
       <UserAvatar name={member.name} avatarUrl={member.avatarUrl} />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{member.name}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="truncate text-sm font-medium">{member.name}</p>
+          <SkillBadges skills={member.skills} max={3} />
+        </div>
         {member.availability && (
           <p className="truncate text-xs text-muted-foreground">
             {member.availability}

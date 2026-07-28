@@ -24,6 +24,7 @@ import {
   SYNC_TRIGGERS,
   TEAM_STATUSES,
   TIMELINE_EVENT_TYPES,
+  type SkillRoleMap,
 } from "@/lib/constants";
 
 /* -------------------------------------------------------------------------- */
@@ -115,6 +116,15 @@ export const eventSettings = pgTable(
       .default([60, 15]),
     remindersEnabled: boolean("reminders_enabled").notNull().default(true),
     autoSyncEnabled: boolean("auto_sync_enabled").notNull().default(true),
+    /**
+     * Skill key → Discord role id. A participant's skills are derived by
+     * intersecting this map with the roles they hold, so nothing has to be
+     * kept in sync manually.
+     */
+    skillRoleIds: jsonb("skill_role_ids")
+      .$type<SkillRoleMap>()
+      .notNull()
+      .default({}),
     /** Template used to build a participant's private ticket link. */
     ticketUrlTemplate: text("ticket_url_template"),
     driveRootUrl: text("drive_root_url"),

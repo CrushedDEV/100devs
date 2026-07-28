@@ -16,18 +16,35 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useServerAction } from "@/hooks/use-server-action";
-import { EVENT_STATUSES, EVENT_STATUS_META } from "@/lib/constants";
+import {
+  EVENT_STATUSES,
+  EVENT_STATUS_META,
+  SKILLS,
+  suggestSkillRoles,
+} from "@/lib/constants";
 import { updateSettingsAction } from "@/server/actions/settings";
 import type { Event, EventSettings } from "@/server/db/schema";
 
 interface SettingsFormProps {
   event: Event;
   settings: EventSettings;
+  guildRoles: { id: string; name: string }[];
   canEdit: boolean;
 }
 
-export function SettingsForm({ event, settings, canEdit }: SettingsFormProps) {
+const NO_ROLE = "none";
+
+export function SettingsForm({
+  event,
+  settings,
+  guildRoles,
+  canEdit,
+}: SettingsFormProps) {
   const { run, isPending, errors } = useServerAction(updateSettingsAction);
+
+  // Roles whose name matches a category are pre-selected, so an organiser who
+  // named them consistently only has to press save.
+  const suggested = suggestSkillRoles(guildRoles);
 
   return (
     <form action={run} className="space-y-6">
@@ -193,6 +210,78 @@ export function SettingsForm({ event, settings, canEdit }: SettingsFormProps) {
               hint="Ejecuta la importación de miembros cada 15 minutos."
               defaultChecked={settings.autoSyncEnabled}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Categorías de participante</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Vincula cada categoría con un rol de Discord. Los participantes
+              que tengan ese rol mostrarán su distintivo automáticamente y
+              podrán filtrarse por él. Una misma persona puede tener varias.
+            </p>
+
+            {guildRoles.length === 0 ? (
+              <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
+                No se han podido cargar los roles del servidor. Revisa el ID del
+                servidor y que el bot siga invitado; después recarga esta página.
+              </p>
+            ) : (
+              <div className="grid gap-2.5">
+                {SKILLS.map((skill) => {
+                  const current =
+                    settings.skillRoleIds[skill.key] ??
+                    suggested[skill.key] ??
+                    NO_ROLE;
+
+                  const isSuggestion =
+                    !settings.skillRoleIds[skill.key] && Boolean(suggested[skill.key]);
+
+                  return (
+                    <div
+                      key={skill.key}
+                      className="grid items-center gap-2 sm:grid-cols-[1fr_1.4fr]"
+                    >
+                      <Label
+                        htmlFor={`skill.${skill.key}`}
+                        className="flex items-center gap-2"
+                      >
+                        {skill.label}
+                        {isSuggestion && (
+                          <span className="rounded-full bg-info/15 px-1.5 py-0.5 text-[10px] font-medium text-info">
+                            detectado
+                          </span>
+                        )}
+                      </Label>
+
+                      <Select
+                        name={`skill.${skill.key}`}
+                        defaultValue={current}
+                      >
+                        <SelectTrigger
+                          id={`skill.${skill.key}`}
+                          size="sm"
+                          className="w-full"
+                        >
+                          <SelectValue placeholder="Sin vincular" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NO_ROLE}>Sin vincular</SelectItem>
+                          {guildRoles.map((role) => (
+                            <SelectItem key={role.id} value={role.id}>
+                              {role.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 

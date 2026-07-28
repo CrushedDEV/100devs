@@ -20,6 +20,16 @@ export async function updateSettingsAction(
   if (raw.startsAt === "") raw.startsAt = null;
   if (raw.endsAt === "") raw.endsAt = null;
 
+  // Skill mappings arrive as `skill.<key>`; "none" means "not linked".
+  const skillRoleIds: Record<string, string> = {};
+  for (const [field, value] of formData.entries()) {
+    if (!field.startsWith("skill.") || typeof value !== "string") continue;
+    if (!value || value === "none") continue;
+    skillRoleIds[field.slice("skill.".length)] = value;
+    delete raw[field];
+  }
+  raw.skillRoleIds = skillRoleIds;
+
   return runAction(settingsSchema, raw, async (values, context) => {
     await requireAdmin();
 
@@ -41,12 +51,14 @@ export async function updateSettingsAction(
       reminderOffsets: values.reminderOffsets,
       remindersEnabled: values.remindersEnabled,
       autoSyncEnabled: values.autoSyncEnabled,
+      skillRoleIds: values.skillRoleIds,
       ticketUrlTemplate: values.ticketUrlTemplate,
       driveRootUrl: values.driveRootUrl,
     });
 
     revalidatePath("/settings");
     revalidatePath("/dashboard");
+    revalidatePath("/participants");
     return ok(undefined, "Configuración guardada.");
   });
 }
