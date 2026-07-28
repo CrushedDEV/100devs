@@ -61,6 +61,7 @@ const OPACITY_MAP = {
 export default function BeamsBackground({
   className,
   intensity = "strong",
+  children,
 }: AnimatedGradientBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beamsRef = useRef<Beam[]>([]);
@@ -236,20 +237,7 @@ export default function BeamsBackground({
         }}
       />
 
-      <div className="relative z-10 flex h-screen w-full items-center justify-center">
-        <div className="flex flex-col items-center justify-center gap-6 px-4 text-center">
-          <motion.h1
-            animate={{ opacity: 1, y: 0 }}
-            className="font-semibold text-6xl text-neutral-900 tracking-tighter md:text-7xl lg:text-8xl dark:text-white"
-            initial={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.8 }}
-          >
-            Beams
-            <br />
-            Background
-          </motion.h1>
-        </div>
-      </div>
+      <div className="relative z-10">{children}</div>
     </div>
   );
 }
