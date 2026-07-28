@@ -59,11 +59,11 @@ export function SkillBadges({ skills, max = 5, className }: SkillBadgesProps) {
           <Tooltip key={skill}>
             <TooltipTrigger asChild>
               <span
-                className="flex size-5 items-center justify-center rounded-md ring-1 ring-inset"
+                className="flex size-5 shrink-0 items-center justify-center rounded-md border"
                 style={{
-                  backgroundColor: `${color}1f`,
+                  backgroundColor: `${color}24`,
                   color,
-                  borderColor: `${color}55`,
+                  borderColor: `${color}66`,
                 }}
               >
                 <Icon className="size-3" />
@@ -115,11 +115,11 @@ export function SkillChips({
         return (
           <span
             key={skill}
-            className="inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium ring-1 ring-inset"
+            className="inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium"
             style={{
-              backgroundColor: `${color}1f`,
+              backgroundColor: `${color}24`,
               color,
-              borderColor: `${color}55`,
+              borderColor: `${color}66`,
             }}
           >
             <Icon className="size-3" />

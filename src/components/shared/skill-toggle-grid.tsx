@@ -71,16 +71,16 @@ export function SkillToggleGrid({
                 : "Vincula esta categoría a un rol de Discord en Ajustes"
             }
             className={cn(
-              "inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium ring-1 ring-inset transition-opacity",
+              "inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium transition-opacity",
               linked ? "cursor-pointer" : "cursor-not-allowed opacity-40",
               busy && "opacity-60",
             )}
             style={
               active
                 ? {
-                    backgroundColor: `${color}1f`,
+                    backgroundColor: `${color}24`,
                     color,
-                    borderColor: `${color}55`,
+                    borderColor: `${color}66`,
                   }
                 : {
                     backgroundColor: "var(--muted)",

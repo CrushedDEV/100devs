@@ -367,7 +367,7 @@ function ParticipantCard({
       <span className="min-w-0 flex-1 truncate text-[13px]">
         {participant.name}
       </span>
-      <EngineBadge engine={participant.engine} className="size-4" />
+      <EngineBadge engine={participant.engine} size="sm" />
       <SkillBadges skills={participant.skills} max={2} />
       {position !== undefined && (
         <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
