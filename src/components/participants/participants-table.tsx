@@ -22,8 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { EngineBadge } from "@/components/shared/engine-badge";
 import { SkillBadges } from "@/components/shared/skill-badges";
 import {
+  ENGINES,
   PARTICIPANT_STATUS_META,
   SKILLS,
   type SkillKey,
@@ -53,6 +55,7 @@ export function ParticipantsTable({
   const [teamFilter, setTeamFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [skillFilter, setSkillFilter] = useState<string>(ALL);
+  const [engineFilter, setEngineFilter] = useState<string>(ALL);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialParticipantId ?? null,
   );
@@ -86,9 +89,19 @@ export function ParticipantsTable({
       ) {
         return false;
       }
+      if (engineFilter !== ALL && participant.engine !== engineFilter) {
+        return false;
+      }
       return true;
     });
-  }, [participants, query, teamFilter, statusFilter, skillFilter]);
+  }, [
+    participants,
+    query,
+    teamFilter,
+    statusFilter,
+    skillFilter,
+    engineFilter,
+  ]);
 
   const selected = participants.find((p) => p.id === selectedId) ?? null;
 
@@ -148,6 +161,20 @@ export function ParticipantsTable({
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={engineFilter} onValueChange={setEngineFilter}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Motor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todos los motores</SelectItem>
+            {ENGINES.map((engine) => (
+              <SelectItem key={engine.key} value={engine.key}>
+                {engine.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {filtered.length ? (
@@ -188,6 +215,7 @@ export function ParticipantsTable({
                             <p className="truncate text-sm font-medium">
                               {participant.name}
                             </p>
+                            <EngineBadge engine={participant.engine} />
                             <SkillBadges skills={participant.skills} max={4} />
                           </div>
                           <p className="truncate text-xs text-muted-foreground">

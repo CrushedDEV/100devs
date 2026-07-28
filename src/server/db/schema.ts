@@ -15,6 +15,7 @@ import {
 import {
   APP_ROLES,
   CHECKPOINT_STATUSES,
+  ENGINE_KEYS,
   EVENT_STATUSES,
   PARTICIPANT_STATUSES,
   REMINDER_KINDS,
@@ -24,6 +25,7 @@ import {
   SYNC_TRIGGERS,
   TEAM_STATUSES,
   TIMELINE_EVENT_TYPES,
+  type EngineKey,
   type SkillRoleMap,
 } from "@/lib/constants";
 
@@ -37,6 +39,10 @@ export const teamStatusEnum = pgEnum("team_status", TEAM_STATUSES);
 export const participantStatusEnum = pgEnum(
   "participant_status",
   PARTICIPANT_STATUSES,
+);
+export const engineEnum = pgEnum(
+  "engine",
+  ENGINE_KEYS as [string, ...string[]],
 );
 export const shiftStatusEnum = pgEnum("shift_status", SHIFT_STATUSES);
 export const checkpointStatusEnum = pgEnum(
@@ -216,6 +222,8 @@ export const participants = pgTable(
     teamId: uuid("team_id").references(() => teams.id, { onDelete: "set null" }),
     status: participantStatusEnum("status").notNull().default("unassigned"),
     orderIndex: integer("order_index").notNull().default(0),
+    /** Set manually from the panel; null until the organiser picks one. */
+    engine: engineEnum("engine").$type<EngineKey>(),
     availability: text("availability"),
     timezone: text("timezone"),
     internalNotes: text("internal_notes"),

@@ -25,6 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useServerAction } from "@/hooks/use-server-action";
 import {
+  ENGINES,
   PARTICIPANT_STATUSES,
   PARTICIPANT_STATUS_META,
   type SkillRoleMap,
@@ -41,6 +42,7 @@ interface ParticipantSheetProps {
 }
 
 const NO_TEAM = "none";
+const NO_ENGINE = "none";
 
 export function ParticipantSheet({
   participant,
@@ -121,6 +123,25 @@ export function ParticipantSheet({
                     {PARTICIPANT_STATUSES.map((status) => (
                       <SelectItem key={status} value={status}>
                         {PARTICIPANT_STATUS_META[status].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+
+              <Field label="Motor" htmlFor="engine">
+                <Select
+                  name="engine"
+                  defaultValue={participant.engine ?? NO_ENGINE}
+                >
+                  <SelectTrigger id="engine" className="w-full">
+                    <SelectValue placeholder="Sin especificar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_ENGINE}>Sin especificar</SelectItem>
+                    {ENGINES.map((engine) => (
+                      <SelectItem key={engine.key} value={engine.key}>
+                        {engine.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

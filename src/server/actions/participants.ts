@@ -33,8 +33,9 @@ export async function updateParticipantAction(
   formData: FormData,
 ): Promise<ActionState> {
   const raw = Object.fromEntries(formData);
-  // An empty select value means "remove from team".
+  // An empty select value means "remove from team" / "no engine set".
   if (raw.teamId === "" || raw.teamId === "none") raw.teamId = null as never;
+  if (raw.engine === "" || raw.engine === "none") raw.engine = null as never;
 
   return runAction(participantUpdateSchema, raw, async ({ id, ...values }, context) => {
     const [updated] = await db

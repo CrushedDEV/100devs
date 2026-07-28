@@ -3,6 +3,7 @@ import "server-only";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
 import type {
+  EngineKey,
   ParticipantStatus,
   SkillKey,
   SkillRoleMap,
@@ -27,6 +28,8 @@ export interface ParticipantView {
   team: { id: string; name: string; color: string } | null;
   /** Derived from the participant's Discord roles, never stored directly. */
   skills: SkillKey[];
+  /** Set by hand in the panel; unrelated to Discord. */
+  engine: EngineKey | null;
 }
 
 /** Inverts the skill→role map so a role id resolves to its skill in O(1). */
@@ -53,6 +56,7 @@ const selection = {
   avatarUrl: users.avatarUrl,
   status: participants.status,
   orderIndex: participants.orderIndex,
+  engine: participants.engine,
   availability: participants.availability,
   timezone: participants.timezone,
   internalNotes: participants.internalNotes,
@@ -76,6 +80,7 @@ interface ParticipantRow {
   availability: string | null;
   timezone: string | null;
   internalNotes: string | null;
+  engine: EngineKey | null;
   discordTicketUrl: string | null;
   discordRoleIds: string[] | null;
   teamId: string | null;
@@ -102,6 +107,7 @@ function toView(row: ParticipantRow, skillRoleIds: SkillRoleMap): ParticipantVie
         ? { id: row.teamId, name: row.teamName, color: row.teamColor }
         : null,
     skills: skillsFromRoles(row.discordRoleIds, skillRoleIds),
+    engine: row.engine,
   };
 }
 

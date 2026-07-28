@@ -164,6 +164,29 @@ export const TIMELINE_EVENT_META: Record<
 };
 
 /* -------------------------------------------------------------------------- */
+/*                                   Engines                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Game engine a participant works with. Unlike skills, this is *not* mirrored
+ * from Discord — the organiser sets it by hand in the panel, so it lives as a
+ * plain column on `participants`.
+ */
+export const ENGINES = [
+  { key: "unity", label: "Unity" },
+  { key: "unreal", label: "Unreal Engine" },
+  { key: "godot", label: "Godot" },
+] as const;
+
+export type EngineKey = (typeof ENGINES)[number]["key"];
+
+export const ENGINE_KEYS = ENGINES.map((engine) => engine.key) as EngineKey[];
+
+export const ENGINE_LABELS = Object.fromEntries(
+  ENGINES.map((engine) => [engine.key, engine.label]),
+) as Record<EngineKey, string>;
+
+/* -------------------------------------------------------------------------- */
 /*                            Skills / capabilities                           */
 /* -------------------------------------------------------------------------- */
 
