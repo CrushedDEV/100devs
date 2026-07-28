@@ -109,7 +109,7 @@ panel y en cada Server Action.
 | Disparador | Qué hace |
 | --- | --- |
 | Botón «Sincronizar» (barra superior y `/settings`) | Sincronización manual inmediata |
-| `GET /api/cron/sync` (cada 15 min) | Importa miembros y reconcilia estados de turno |
+| `GET /api/cron/sync` | Importa miembros y reconcilia estados de turno |
 | Inicio de sesión | Actualiza el perfil y el rol del usuario que entra |
 
 La sincronización:
@@ -126,7 +126,7 @@ Cada ejecución queda registrada en `sync_runs` y se muestra en `/settings`.
 
 ## Recordatorios automáticos
 
-`GET /api/cron/reminders` (cada 5 min):
+`GET /api/cron/reminders`:
 
 1. Materializa las filas de recordatorio de los turnos de las próximas 24 h.
 2. Envía por mensaje directo los que ya han vencido.
@@ -138,6 +138,48 @@ aunque una ejecución se solape con otra.
 
 Ambos endpoints exigen `CRON_SECRET` mediante `Authorization: Bearer …` (así es
 como los llama Vercel Cron) o `?secret=`.
+
+### Frecuencia de ejecución y el límite del plan Hobby
+
+Para que la sincronización y los recordatorios sean útiles necesitan ejecutarse
+cada 5–15 minutos, pero **el plan Hobby de Vercel solo permite cron jobs de
+frecuencia diaria**. `vercel.json` declara ambos crons a diario únicamente como
+red de seguridad; la ejecución frecuente real debe dispararse desde fuera:
+
+**Opción A — servicio de cron externo gratuito** (recomendado, sin coste)
+
+1. Crea una cuenta en [cron-job.org](https://cron-job.org) (u otro servicio
+   equivalente: EasyCron, UptimeRobot, etc.).
+2. Configura dos tareas HTTP GET apuntando a tu dominio de producción:
+   - `https://tu-app.vercel.app/api/cron/sync` cada 15 min
+   - `https://tu-app.vercel.app/api/cron/reminders` cada 5 min
+3. En ambas, añade la cabecera `Authorization: Bearer <CRON_SECRET>` (el mismo
+   valor que tengas en las variables de entorno de Vercel).
+
+**Opción B — GitHub Actions** (si el repositorio vive en GitHub)
+
+```yaml
+# .github/workflows/cron.yml
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -f -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://tu-app.vercel.app/api/cron/sync
+```
+
+Duplica el job con `*/5 * * * *` para `/api/cron/reminders`. GitHub Actions no
+garantiza el minuto exacto, pero es más que suficiente para este caso de uso.
+
+**Opción C — plan Pro de Vercel**
+
+Si prefieres no depender de un servicio externo, el plan Pro elimina la
+restricción y `vercel.json` puede volver a declarar `*/15 * * * *` y
+`*/5 * * * *` directamente.
 
 ---
 
