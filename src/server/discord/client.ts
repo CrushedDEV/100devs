@@ -153,6 +153,30 @@ export function fetchGuildRoles(guildId: string): Promise<DiscordRole[]> {
   return request<DiscordRole[]>(`/guilds/${guildId}/roles`);
 }
 
+/**
+ * Grants a role to a member. Requires the bot's own role to sit *above* the
+ * target role in the server's role list — Discord returns 403 otherwise.
+ */
+export function addGuildMemberRole(
+  guildId: string,
+  userId: string,
+  roleId: string,
+): Promise<void> {
+  return request(`/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
+    method: "PUT",
+  });
+}
+
+export function removeGuildMemberRole(
+  guildId: string,
+  userId: string,
+  roleId: string,
+): Promise<void> {
+  return request(`/guilds/${guildId}/members/${userId}/roles/${roleId}`, {
+    method: "DELETE",
+  });
+}
+
 /** Opens (or reuses) a DM channel with a user and posts a message. */
 export async function sendDirectMessage(
   userId: string,

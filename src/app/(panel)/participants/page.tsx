@@ -20,7 +20,7 @@ export default async function ParticipantsPage({
 }: {
   searchParams: Promise<{ participant?: string }>;
 }) {
-  const { event } = await getActiveEvent();
+  const { event, settings } = await getActiveEvent();
   const [participants, teams, params] = await Promise.all([
     listParticipants(event.id),
     listTeams(event.id),
@@ -74,6 +74,7 @@ export default async function ParticipantsPage({
       <ParticipantsTable
         participants={participants}
         teams={teams.map((team) => ({ id: team.id, name: team.name }))}
+        skillRoleIds={settings.skillRoleIds}
         initialParticipantId={params.participant}
       />
     </>

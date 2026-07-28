@@ -73,6 +73,12 @@ export const reorderParticipantsSchema = z.object({
   orderedIds: z.array(uuid).min(1),
 });
 
+export const toggleParticipantSkillSchema = z.object({
+  participantId: uuid,
+  skill: z.enum(SKILL_KEYS as [SkillKey, ...SkillKey[]]),
+  enabled: z.boolean(),
+});
+
 /* -------------------------------- Shifts -------------------------------- */
 
 export const shiftInputSchema = z

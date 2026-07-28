@@ -2,7 +2,7 @@
 
 import { ExternalLink } from "lucide-react";
 
-import { SkillChips } from "@/components/shared/skill-badges";
+import { SkillToggleGrid } from "@/components/shared/skill-toggle-grid";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,13 +24,18 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { useServerAction } from "@/hooks/use-server-action";
-import { PARTICIPANT_STATUSES, PARTICIPANT_STATUS_META } from "@/lib/constants";
+import {
+  PARTICIPANT_STATUSES,
+  PARTICIPANT_STATUS_META,
+  type SkillRoleMap,
+} from "@/lib/constants";
 import { updateParticipantAction } from "@/server/actions/participants";
 import type { ParticipantView } from "@/server/services/participants";
 
 interface ParticipantSheetProps {
   participant: ParticipantView | null;
   teams: { id: string; name: string }[];
+  skillRoleIds: SkillRoleMap;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -40,6 +45,7 @@ const NO_TEAM = "none";
 export function ParticipantSheet({
   participant,
   teams,
+  skillRoleIds,
   open,
   onOpenChange,
 }: ParticipantSheetProps) {
@@ -75,9 +81,14 @@ export function ParticipantSheet({
           <div className="space-y-5 p-4">
             <div className="space-y-1.5">
               <Label>Categorías</Label>
-              <SkillChips skills={participant.skills} />
+              <SkillToggleGrid
+                participantId={participant.id}
+                skills={participant.skills}
+                skillRoleIds={skillRoleIds}
+              />
               <p className="text-xs text-muted-foreground">
-                Se derivan de sus roles de Discord. Se configuran en Ajustes.
+                Al activar una, el bot le asigna el rol correspondiente en
+                Discord al instante. Vincula roles en Ajustes primero.
               </p>
             </div>
 

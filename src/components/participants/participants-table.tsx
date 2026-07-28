@@ -23,7 +23,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SkillBadges } from "@/components/shared/skill-badges";
-import { PARTICIPANT_STATUS_META, SKILLS, type SkillKey } from "@/lib/constants";
+import {
+  PARTICIPANT_STATUS_META,
+  SKILLS,
+  type SkillKey,
+  type SkillRoleMap,
+} from "@/lib/constants";
 import type { ParticipantView } from "@/server/services/participants";
 
 import { ParticipantSheet } from "./participant-sheet";
@@ -31,6 +36,7 @@ import { ParticipantSheet } from "./participant-sheet";
 interface ParticipantsTableProps {
   participants: ParticipantView[];
   teams: { id: string; name: string }[];
+  skillRoleIds: SkillRoleMap;
   /** Pre-selected participant id, e.g. arriving from the global search. */
   initialParticipantId?: string;
 }
@@ -40,6 +46,7 @@ const ALL = "all";
 export function ParticipantsTable({
   participants,
   teams,
+  skillRoleIds,
   initialParticipantId,
 }: ParticipantsTableProps) {
   const [query, setQuery] = useState("");
@@ -251,6 +258,7 @@ export function ParticipantsTable({
       <ParticipantSheet
         participant={selected}
         teams={teams}
+        skillRoleIds={skillRoleIds}
         open={Boolean(selected)}
         onOpenChange={(open) => !open && setSelectedId(null)}
       />
