@@ -13,6 +13,10 @@ import { SetupRequired } from "./setup-required";
 
 export const metadata: Metadata = { title: "Acceso" };
 
+// Reads cookies and the runtime environment, so it must never be prerendered:
+// otherwise the build-time config check would be baked into the output.
+export const dynamic = "force-dynamic";
+
 const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
   NotGuildMember: {
     title: "No perteneces al servidor del evento",
@@ -36,7 +40,7 @@ export default async function LoginPage({
   // Checked before `auth()`: initialising Auth.js reads the validated env and
   // would otherwise throw, turning a config mistake into a blank page.
   const issues = getEnvIssues();
-  if (issues.length > 0) return <SetupRequired count={issues.length} />;
+  if (issues.length > 0) return <SetupRequired missing={issues} />;
 
   const session = await auth();
   if (session?.user && isStaffRole(session.user.role)) redirect("/dashboard");
