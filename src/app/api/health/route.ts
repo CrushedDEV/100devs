@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     database: await checkDatabase(),
     schema: await checkSchema(),
     discord: await checkDiscord(),
+    roles: await checkRoles(),
   };
 
   const ok = Object.values(checks).every((check) => check.ok);
@@ -103,7 +104,7 @@ async function checkDatabase(): Promise<Check> {
     await db.execute(sql`select 1`);
     return { ok: true };
   } catch (error) {
-    return { ok: false, detail: describe(error) };
+    return { ok: false, detail: describeError(error) };
   }
 }
 
@@ -145,7 +146,7 @@ async function checkSchema(): Promise<Check> {
         : undefined,
     };
   } catch (error) {
-    return { ok: false, detail: describe(error) };
+    return { ok: false, detail: describeError(error) };
   }
 }
 
@@ -184,10 +185,57 @@ async function checkDiscord(): Promise<Check> {
     const guild = (await response.json()) as { name?: string };
     return { ok: true, guild: guild.name };
   } catch (error) {
-    return { ok: false, detail: describe(error) };
+    return { ok: false, detail: describeError(error) };
   }
 }
 
-function describe(error: unknown): string {
+/**
+ * Lists every role in the event's Discord server next to the role ids
+ * configured for admin/moderator/participant, so a mismatch (typo, stale id
+ * from a previous server, wrong role picked) is visible at a glance without
+ * needing anyone's personal Discord user id.
+ */
+async function checkRoles(): Promise<Check> {
+  try {
+    const { getActiveEvent } = await import("@/server/services/events");
+    const { fetchGuildRoles } = await import("@/server/discord/client");
+
+    const { event, settings } = await getActiveEvent();
+    const guildRoles = await fetchGuildRoles(event.discordGuildId);
+
+    const byId = new Map(guildRoles.map((role) => [role.id, role.name]));
+
+    const describe = (ids: string[]) =>
+      ids.map((id) => ({
+        id,
+        name: byId.get(id) ?? null,
+        existsInGuild: byId.has(id),
+      }));
+
+    const admin = describe(settings.adminRoleIds);
+    const moderator = describe(settings.moderatorRoleIds);
+    const participant = describe(settings.participantRoleIds);
+
+    const anyMissing = [...admin, ...moderator, ...participant].some(
+      (role) => !role.existsInGuild,
+    );
+
+    return {
+      ok: !anyMissing,
+      detail: anyMissing
+        ? "Uno o más IDs de rol configurados no existen en el servidor de Discord actual (existsInGuild: false). Corrígelos en /settings con el ID correcto de la lista `guildRoles`."
+        : undefined,
+      eventDiscordGuildId: event.discordGuildId,
+      configured: { admin, moderator, participant },
+      guildRoles: guildRoles
+        .sort((a, b) => b.position - a.position)
+        .map((role) => ({ id: role.id, name: role.name })),
+    };
+  } catch (error) {
+    return { ok: false, detail: describeError(error) };
+  }
+}
+
+function describeError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
