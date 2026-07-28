@@ -15,6 +15,13 @@
       "when": 1785271048700,
       "tag": "0001_handy_captain_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785279176913,
+      "tag": "0002_colorful_may_parker",
+      "breakpoints": true
     }
   ]
 }
