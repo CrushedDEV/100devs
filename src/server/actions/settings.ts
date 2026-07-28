@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 
 import { settingsSchema } from "@/lib/validators";
-import { requireAdmin } from "@/server/auth/guard";
-import { updateEvent, updateEventSettings } from "@/server/services/events";
+import {
+  getActiveEvent,
+  updateEvent,
+  updateEventSettings,
+} from "@/server/services/events";
 
 import { ok, runAction, type ActionState } from "./shared";
 
@@ -30,8 +33,20 @@ export async function updateSettingsAction(
   }
   raw.skillRoleIds = skillRoleIds;
 
+  // Admin-only inputs are rendered disabled for moderators, so the browser
+  // omits them. Fill them from the stored values to satisfy validation; the
+  // handler ignores them for non-admins regardless of what arrives here.
+  const { settings: current, event: currentEvent } = await getActiveEvent();
+  raw.discordGuildId ??= currentEvent.discordGuildId;
+  raw.adminRoleIds ??= current.adminRoleIds.join(",");
+  raw.moderatorRoleIds ??= current.moderatorRoleIds.join(",");
+
   return runAction(settingsSchema, raw, async (values, context) => {
-    await requireAdmin();
+    // Moderators may configure the event, but not who gets into the panel:
+    // the guild and the staff role ids stay under administrator control.
+    // Enforced here rather than in the UI, since disabled inputs are trivial
+    // to bypass.
+    const isAdmin = context.session.user.role === "admin";
 
     await updateEvent(context.event.id, {
       name: values.name,
@@ -41,12 +56,16 @@ export async function updateSettingsAction(
       defaultShiftMinutes: values.defaultShiftMinutes,
       startsAt: values.startsAt ?? null,
       endsAt: values.endsAt ?? null,
-      discordGuildId: values.discordGuildId,
+      ...(isAdmin ? { discordGuildId: values.discordGuildId } : {}),
     });
 
     await updateEventSettings(context.event.id, {
-      adminRoleIds: values.adminRoleIds,
-      moderatorRoleIds: values.moderatorRoleIds,
+      ...(isAdmin
+        ? {
+            adminRoleIds: values.adminRoleIds,
+            moderatorRoleIds: values.moderatorRoleIds,
+          }
+        : {}),
       participantRoleIds: values.participantRoleIds,
       reminderOffsets: values.reminderOffsets,
       remindersEnabled: values.remindersEnabled,

@@ -44,7 +44,7 @@ export default async function SettingsPage() {
           event={event}
           settings={settings}
           guildRoles={guildRoles}
-          canEdit={session.user.role === "admin"}
+          isAdmin={session.user.role === "admin"}
         />
 
         <aside className="space-y-4">

@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   DndContext,
   DragOverlay,
+  MeasuringStrategy,
   PointerSensor,
   KeyboardSensor,
-  closestCorners,
+  pointerWithin,
+  rectIntersection,
   useDroppable,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
@@ -27,6 +30,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Inbox, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { SkillBadges } from "@/components/shared/skill-badges";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,6 +86,17 @@ export function TeamBoard({ teams, participants }: TeamBoardProps) {
         : null,
     [activeId, columns],
   );
+
+  /**
+   * Corner-distance heuristics misbehave with many equally sized columns: the
+   * nearest *corner* is often not the column under the cursor, which made every
+   * other column impossible to drop into. Resolving by pointer position first
+   * is exact, with a rectangle-overlap fallback for keyboard dragging.
+   */
+  const collisionDetection = useCallback<CollisionDetection>((args) => {
+    const underPointer = pointerWithin(args);
+    return underPointer.length > 0 ? underPointer : rectIntersection(args);
+  }, []);
 
   const findColumn = (id: string): string | undefined => {
     if (id in columns) return id;
@@ -159,12 +174,15 @@ export function TeamBoard({ teams, participants }: TeamBoardProps) {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={collisionDetection}
+      // Columns change size as cards move between them mid-drag; without
+      // continuous measuring the drop rectangles go stale and land wrong.
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="flex gap-3 overflow-x-auto pb-3">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] items-start gap-2.5">
         <Column
           id={UNASSIGNED}
           title="Sin equipo"
@@ -231,11 +249,11 @@ function Column({
     <section
       ref={setNodeRef}
       className={cn(
-        "flex w-64 shrink-0 flex-col rounded-xl bg-muted/35 ring-1 transition-colors",
+        "flex flex-col rounded-xl bg-muted/35 ring-1 transition-colors",
         isOver ? "bg-muted/70 ring-brand/40" : "ring-foreground/8",
       )}
     >
-      <header className="flex items-center gap-2 px-3 py-2.5">
+      <header className="flex items-center gap-1.5 px-2.5 py-2">
         <span
           aria-hidden
           className="size-2 shrink-0 rounded-full"
@@ -269,7 +287,9 @@ function Column({
         items={participants.map((participant) => participant.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex min-h-24 flex-1 flex-col gap-1.5 px-2 pb-2">
+        {/* Capped height keeps every column visible at once; long lists scroll
+            inside instead of stretching the whole board. */}
+        <div className="no-scrollbar flex max-h-[26rem] min-h-20 flex-col gap-1 overflow-y-auto px-1.5 pb-1.5">
           {participants.length ? (
             participants.map((participant, index) => (
               <SortableParticipant
@@ -279,10 +299,10 @@ function Column({
               />
             ))
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-border/80 py-6 text-center">
-              <Inbox className="size-4 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">
-                Arrastra participantes aquí
+            <div className="flex min-h-20 flex-1 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border/80 px-2 py-4 text-center">
+              <Inbox className="size-3.5 text-muted-foreground" />
+              <p className="text-[11px] leading-tight text-muted-foreground">
+                Arrastra aquí
               </p>
             </div>
           )}
@@ -333,20 +353,23 @@ function ParticipantCard({
   return (
     <article
       className={cn(
-        "flex touch-none items-center gap-2 rounded-lg bg-card px-2 py-1.5 ring-1 ring-foreground/10 select-none",
+        "flex touch-none items-center gap-1.5 rounded-lg bg-card px-1.5 py-1 ring-1 ring-foreground/10 select-none",
         overlay ? "shadow-xl ring-brand/40" : "hover:ring-foreground/20",
       )}
     >
-      <GripVertical className="size-3.5 shrink-0 cursor-grab text-muted-foreground/60" />
+      <GripVertical className="size-3 shrink-0 cursor-grab text-muted-foreground/60" />
       <UserAvatar
         name={participant.name}
         avatarUrl={participant.avatarUrl}
-        className="size-6"
+        className="size-5"
       />
-      <span className="min-w-0 flex-1 truncate text-sm">{participant.name}</span>
+      <span className="min-w-0 flex-1 truncate text-[13px]">
+        {participant.name}
+      </span>
+      <SkillBadges skills={participant.skills} max={2} />
       {position !== undefined && (
-        <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-          #{position}
+        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+          {position}
         </span>
       )}
     </article>

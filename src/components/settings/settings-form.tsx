@@ -29,7 +29,11 @@ interface SettingsFormProps {
   event: Event;
   settings: EventSettings;
   guildRoles: { id: string; name: string }[];
-  canEdit: boolean;
+  /**
+   * Administrators additionally control which Discord roles grant access to
+   * the panel. Moderators can edit everything else.
+   */
+  isAdmin: boolean;
 }
 
 const NO_ROLE = "none";
@@ -38,7 +42,7 @@ export function SettingsForm({
   event,
   settings,
   guildRoles,
-  canEdit,
+  isAdmin,
 }: SettingsFormProps) {
   const { run, isPending, errors } = useServerAction(updateSettingsAction);
 
@@ -48,7 +52,7 @@ export function SettingsForm({
 
   return (
     <form action={run} className="space-y-6">
-      <fieldset disabled={!canEdit || isPending} className="space-y-6">
+      <fieldset disabled={isPending} className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Evento</CardTitle>
@@ -128,34 +132,40 @@ export function SettingsForm({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Servidor de Discord</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Field
-              label="ID del servidor (guild)"
-              htmlFor="discordGuildId"
-              error={errors?.discordGuildId}
-              hint="Con el modo desarrollador activado en Discord: clic derecho sobre el icono del servidor → Copiar ID del servidor."
-            >
-              <Input
-                id="discordGuildId"
-                name="discordGuildId"
-                defaultValue={event.discordGuildId}
-                placeholder="123456789012345678"
-                required
-              />
-            </Field>
+        {/* Access control: only administrators, to avoid self-promotion. */}
+        <fieldset disabled={!isAdmin} className="contents">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Servidor de Discord
+                {!isAdmin && <AdminOnlyTag />}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field
+                label="ID del servidor (guild)"
+                htmlFor="discordGuildId"
+                error={errors?.discordGuildId}
+                hint="Con el modo desarrollador activado en Discord: clic derecho sobre el icono del servidor → Copiar ID del servidor."
+              >
+                <Input
+                  id="discordGuildId"
+                  name="discordGuildId"
+                  defaultValue={event.discordGuildId}
+                  placeholder="123456789012345678"
+                  required
+                />
+              </Field>
 
-            <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
-              Cambiar este ID hace que la sincronización y el control de acceso
-              pasen a comprobarse contra el nuevo servidor. Los IDs de rol de
-              abajo deben pertenecer a ese mismo servidor, o nadie podrá
-              sincronizarse ni entrar al panel.
-            </p>
-          </CardContent>
-        </Card>
+              <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs text-warning">
+                Cambiar este ID hace que la sincronización y el control de acceso
+                pasen a comprobarse contra el nuevo servidor. Los IDs de rol de
+                abajo deben pertenecer a ese mismo servidor, o nadie podrá
+                sincronizarse ni entrar al panel.
+              </p>
+            </CardContent>
+          </Card>
+        </fieldset>
 
         <Card>
           <CardHeader>
@@ -167,30 +177,43 @@ export function SettingsForm({
               importa automáticamente a los miembros que los tengan asignados.
             </p>
 
-            <Field
-              label="Administradores"
-              htmlFor="adminRoleIds"
-              error={errors?.adminRoleIds}
-            >
-              <Input
-                id="adminRoleIds"
-                name="adminRoleIds"
-                defaultValue={settings.adminRoleIds.join(", ")}
-                placeholder="123456789012345678, …"
-              />
-            </Field>
+            {/* Editing these grants panel access, so they stay admin-only. */}
+            <fieldset disabled={!isAdmin} className="space-y-4">
+              <Field
+                label={
+                  <span className="flex items-center gap-2">
+                    Administradores
+                    {!isAdmin && <AdminOnlyTag />}
+                  </span>
+                }
+                htmlFor="adminRoleIds"
+                error={errors?.adminRoleIds}
+              >
+                <Input
+                  id="adminRoleIds"
+                  name="adminRoleIds"
+                  defaultValue={settings.adminRoleIds.join(", ")}
+                  placeholder="123456789012345678, …"
+                />
+              </Field>
 
-            <Field
-              label="Moderadores"
-              htmlFor="moderatorRoleIds"
-              error={errors?.moderatorRoleIds}
-            >
-              <Input
-                id="moderatorRoleIds"
-                name="moderatorRoleIds"
-                defaultValue={settings.moderatorRoleIds.join(", ")}
-              />
-            </Field>
+              <Field
+                label={
+                  <span className="flex items-center gap-2">
+                    Moderadores
+                    {!isAdmin && <AdminOnlyTag />}
+                  </span>
+                }
+                htmlFor="moderatorRoleIds"
+                error={errors?.moderatorRoleIds}
+              >
+                <Input
+                  id="moderatorRoleIds"
+                  name="moderatorRoleIds"
+                  defaultValue={settings.moderatorRoleIds.join(", ")}
+                />
+              </Field>
+            </fieldset>
 
             <Field
               label="Participantes"
@@ -338,22 +361,28 @@ export function SettingsForm({
           </CardContent>
         </Card>
 
-        {canEdit && (
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isPending}>
-              <Save className="size-3.5" />
-              {isPending ? "Guardando…" : "Guardar configuración"}
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center justify-end gap-3">
+          {!isAdmin && (
+            <p className="text-xs text-muted-foreground">
+              Los campos marcados como «solo admin» controlan el acceso al panel.
+            </p>
+          )}
+          <Button type="submit" disabled={isPending}>
+            <Save className="size-3.5" />
+            {isPending ? "Guardando…" : "Guardar configuración"}
+          </Button>
+        </div>
       </fieldset>
-
-      {!canEdit && (
-        <p className="text-sm text-muted-foreground">
-          Solo los administradores pueden modificar la configuración del evento.
-        </p>
-      )}
     </form>
+  );
+}
+
+/** Marks a control that moderators can see but not change. */
+function AdminOnlyTag() {
+  return (
+    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+      solo admin
+    </span>
   );
 }
 
@@ -365,7 +394,7 @@ function Field({
   className,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   htmlFor: string;
   hint?: string;
   error?: string[];
