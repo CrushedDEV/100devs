@@ -4,10 +4,12 @@ import { Gamepad2, ShieldAlert, UserX } from "lucide-react";
 
 import BeamsBackground from "@/components/kokonutui/beams-background";
 import ShimmerText from "@/components/kokonutui/shimmer-text";
+import { getEnvIssues } from "@/lib/env";
 import { auth } from "@/server/auth";
 import { isStaffRole } from "@/server/auth/roles";
 
 import { DiscordLoginButton } from "./discord-login-button";
+import { SetupRequired } from "./setup-required";
 
 export const metadata: Metadata = { title: "Acceso" };
 
@@ -31,6 +33,11 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string; callbackUrl?: string }>;
 }) {
+  // Checked before `auth()`: initialising Auth.js reads the validated env and
+  // would otherwise throw, turning a config mistake into a blank page.
+  const issues = getEnvIssues();
+  if (issues.length > 0) return <SetupRequired count={issues.length} />;
+
   const session = await auth();
   if (session?.user && isStaffRole(session.user.role)) redirect("/dashboard");
 

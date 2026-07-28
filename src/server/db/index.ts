@@ -32,9 +32,13 @@ function createClient(): DrizzleClient {
  * `next build` can statically analyse modules without a live DATABASE_URL.
  */
 export const db = new Proxy({} as DrizzleClient, {
-  get(_target, prop, receiver) {
+  get(_target, prop) {
     const client = (globalForDb.__db ??= createClient());
-    const value = Reflect.get(client, prop, receiver);
+
+    // `Reflect.get` is called without a receiver on purpose: forwarding the
+    // proxy would make Drizzle's internal getters run with `this` bound to the
+    // proxy, which breaks its private class fields at runtime.
+    const value = Reflect.get(client, prop);
     return typeof value === "function" ? value.bind(client) : value;
   },
 });

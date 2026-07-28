@@ -42,14 +42,35 @@ export function getEnv(): ServerEnv {
 
   const parsed = serverSchema.safeParse(process.env);
   if (!parsed.success) {
-    const issues = parsed.error.issues
-      .map((issue) => `  • ${issue.path.join(".")}: ${issue.message}`)
-      .join("\n");
+    // Logged in full (visible in the Vercel runtime logs) because the message
+    // that reaches the browser is reduced to an opaque digest in production.
+    const issues = describeIssues(parsed.error.issues);
+    console.error(`[env] Configuración inválida:\n${issues}`);
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
 
   cached = parsed.data;
   return cached;
+}
+
+/**
+ * Non-throwing variant used by pages that must stay renderable even when the
+ * deployment is misconfigured, so the user gets a setup screen rather than a
+ * blank page.
+ */
+export function getEnvIssues(): string[] {
+  const parsed = serverSchema.safeParse(process.env);
+  if (parsed.success) return [];
+
+  return parsed.error.issues.map((issue) => issue.path.join(".") || "env");
+}
+
+function describeIssues(
+  issues: { path: PropertyKey[]; message: string }[],
+): string {
+  return issues
+    .map((issue) => `  • ${issue.path.join(".")}: ${issue.message}`)
+    .join("\n");
 }
 
 /** Reads a comma separated env var into a clean array of ids. */
