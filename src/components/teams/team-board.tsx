@@ -183,7 +183,7 @@ export function TeamBoard({ teams, participants }: TeamBoardProps) {
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] items-start gap-2.5">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(215px,1fr))] items-start gap-2.5">
         <Column
           id={UNASSIGNED}
           title="Sin equipo"
@@ -254,21 +254,21 @@ function Column({
         isOver ? "bg-muted/70 ring-brand/40" : "ring-foreground/8",
       )}
     >
-      <header className="flex items-center gap-1.5 px-2.5 py-2">
+      <header className="flex items-start gap-1.5 px-2.5 py-2">
         <span
           aria-hidden
-          className="size-2 shrink-0 rounded-full"
+          className="mt-1.5 size-2 shrink-0 rounded-full"
           style={{ backgroundColor: color }}
         />
         {href ? (
           <Link
             href={href}
-            className="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
+            className="min-w-0 flex-1 text-sm leading-tight font-medium break-words hover:underline"
           >
             {title}
           </Link>
         ) : (
-          <span className="min-w-0 flex-1 truncate text-sm font-medium">
+          <span className="min-w-0 flex-1 text-sm leading-tight font-medium break-words">
             {title}
           </span>
         )}
@@ -354,22 +354,33 @@ function ParticipantCard({
   return (
     <article
       className={cn(
-        "flex touch-none items-center gap-1.5 rounded-lg bg-card px-1.5 py-1 ring-1 ring-foreground/10 select-none",
+        "flex touch-none items-start gap-1.5 rounded-lg bg-card px-1.5 py-1.5 ring-1 ring-foreground/10 select-none",
         overlay ? "shadow-xl ring-brand/40" : "hover:ring-foreground/20",
       )}
     >
-      <GripVertical className="size-3 shrink-0 cursor-grab text-muted-foreground/60" />
+      <GripVertical className="mt-1 size-3 shrink-0 cursor-grab text-muted-foreground/60" />
       <UserAvatar
         name={participant.name}
         avatarUrl={participant.avatarUrl}
-        className="size-5"
+        className="size-5 shrink-0"
       />
-      <EngineName engine={participant.engine} className="min-w-0 flex-1 text-[13px]">
-        {participant.name}
-      </EngineName>
-      <SkillBadges skills={participant.skills} max={2} />
+
+      {/* Name gets a row of its own so it is never clipped by the badges. */}
+      <div className="min-w-0 flex-1 space-y-1">
+        <EngineName
+          engine={participant.engine}
+          className="block text-[13px] leading-tight break-words"
+        >
+          {participant.name}
+        </EngineName>
+
+        {participant.skills.length > 0 && (
+          <SkillBadges skills={participant.skills} max={6} />
+        )}
+      </div>
+
       {position !== undefined && (
-        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+        <span className="mt-0.5 shrink-0 text-[10px] tabular-nums text-muted-foreground">
           {position}
         </span>
       )}

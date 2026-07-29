@@ -26,17 +26,16 @@ export function EngineName({
   children: React.ReactNode;
   className?: string;
 }) {
+  // Truncation is left to the caller: the board shows names in full, while
+  // denser surfaces such as the participants table clip them.
   if (!engine) {
-    return <span className={cn("truncate", className)}>{children}</span>;
+    return <span className={className}>{children}</span>;
   }
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          className={cn("truncate", className)}
-          style={{ color: engineColor(engine) }}
-        >
+        <span className={className} style={{ color: engineColor(engine) }}>
           {children}
         </span>
       </TooltipTrigger>

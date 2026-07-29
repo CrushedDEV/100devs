@@ -216,7 +216,7 @@ export function ParticipantsTable({
                           <div className="flex items-center gap-1.5">
                             <EngineName
                               engine={participant.engine}
-                              className="text-sm font-medium"
+                              className="truncate text-sm font-medium"
                             >
                               {participant.name}
                             </EngineName>

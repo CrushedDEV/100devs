@@ -154,7 +154,10 @@ function SortableMember({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <EngineName engine={member.engine} className="text-sm font-medium">
+          <EngineName
+            engine={member.engine}
+            className="truncate text-sm font-medium"
+          >
             {member.name}
           </EngineName>
           <SkillBadges skills={member.skills} max={3} />
