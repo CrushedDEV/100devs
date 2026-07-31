@@ -56,9 +56,8 @@ export const participantUpdateSchema = z.object({
   id: uuid,
   teamId: uuid.nullable().optional(),
   status: z.enum(PARTICIPANT_STATUSES).optional(),
-  engine: z
-    .enum(ENGINE_KEYS as [EngineKey, ...EngineKey[]])
-    .nullable()
+  engines: z
+    .array(z.enum(ENGINE_KEYS as [EngineKey, ...EngineKey[]]))
     .optional(),
   availability: optionalText,
   timezone: z.string().trim().max(64).nullable().optional(),

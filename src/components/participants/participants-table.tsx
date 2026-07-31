@@ -28,6 +28,7 @@ import {
   ENGINES,
   PARTICIPANT_STATUS_META,
   SKILLS,
+  type EngineKey,
   type SkillKey,
   type SkillRoleMap,
 } from "@/lib/constants";
@@ -89,7 +90,10 @@ export function ParticipantsTable({
       ) {
         return false;
       }
-      if (engineFilter !== ALL && participant.engine !== engineFilter) {
+      if (
+        engineFilter !== ALL &&
+        !participant.engines.includes(engineFilter as EngineKey)
+      ) {
         return false;
       }
       return true;
@@ -215,7 +219,7 @@ export function ParticipantsTable({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <EngineName
-                              engine={participant.engine}
+                              engines={participant.engines}
                               className="truncate text-sm font-medium"
                             >
                               {participant.name}

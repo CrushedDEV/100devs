@@ -368,7 +368,7 @@ function ParticipantCard({
       {/* Name gets a row of its own so it is never clipped by the badges. */}
       <div className="min-w-0 flex-1 space-y-1">
         <EngineName
-          engine={participant.engine}
+          engines={participant.engines}
           className="block text-[13px] leading-tight break-words"
         >
           {participant.name}

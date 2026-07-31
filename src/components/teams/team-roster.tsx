@@ -155,7 +155,7 @@ function SortableMember({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <EngineName
-            engine={member.engine}
+            engines={member.engines}
             className="truncate text-sm font-medium"
           >
             {member.name}

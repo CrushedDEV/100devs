@@ -5,6 +5,7 @@ import { ExternalLink } from "lucide-react";
 import { SkillToggleGrid } from "@/components/shared/skill-toggle-grid";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -42,7 +43,6 @@ interface ParticipantSheetProps {
 }
 
 const NO_TEAM = "none";
-const NO_ENGINE = "none";
 
 export function ParticipantSheet({
   participant,
@@ -129,25 +129,27 @@ export function ParticipantSheet({
                 </Select>
               </Field>
 
-              <Field label="Motor" htmlFor="engine">
-                <Select
-                  name="engine"
-                  defaultValue={participant.engine ?? NO_ENGINE}
-                >
-                  <SelectTrigger id="engine" className="w-full">
-                    <SelectValue placeholder="Sin especificar" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_ENGINE}>Sin especificar</SelectItem>
-                    {ENGINES.map((engine) => (
-                      <SelectItem key={engine.key} value={engine.key}>
-                        {engine.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
             </div>
+
+            <Field label="Motores" htmlFor="engines-0">
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {ENGINES.map((engine, index) => (
+                  <label
+                    key={engine.key}
+                    htmlFor={`engines-${index}`}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <Checkbox
+                      id={`engines-${index}`}
+                      name="engines"
+                      value={engine.key}
+                      defaultChecked={participant.engines.includes(engine.key)}
+                    />
+                    {engine.label}
+                  </label>
+                ))}
+              </div>
+            </Field>
 
             <Field
               label="Disponibilidad"

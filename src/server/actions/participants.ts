@@ -32,10 +32,14 @@ export async function updateParticipantAction(
   _prev: ActionState | undefined,
   formData: FormData,
 ): Promise<ActionState> {
-  const raw = Object.fromEntries(formData);
-  // An empty select value means "remove from team" / "no engine set".
+  const raw = Object.fromEntries(formData) as Record<string, unknown>;
+  // An empty select value means "remove from team".
   if (raw.teamId === "" || raw.teamId === "none") raw.teamId = null as never;
-  if (raw.engine === "" || raw.engine === "none") raw.engine = null as never;
+
+  // Unchecked boxes are simply absent from FormData, so this is rebuilt from
+  // scratch every submit — otherwise unchecking every engine would leave the
+  // previously stored ones untouched instead of clearing them.
+  raw.engines = formData.getAll("engines");
 
   return runAction(participantUpdateSchema, raw, async ({ id, ...values }, context) => {
     const [updated] = await db
