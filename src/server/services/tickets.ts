@@ -5,6 +5,7 @@ import { asc, eq } from "drizzle-orm";
 import {
   normaliseRoleName,
   type EngineKey,
+  type TicketDelivery,
   type TicketStatus,
 } from "@/lib/constants";
 import { db } from "@/server/db";
@@ -452,6 +453,7 @@ export interface TicketReviewView {
   hasMedia: boolean;
   gameUrl: string | null;
   mediaUrl: string | null;
+  deliveries: TicketDelivery[];
   summary: string | null;
   lastActivityAt: Date | null;
   analyzedAt: Date;
@@ -494,6 +496,7 @@ export async function listTicketReviews(
     hasMedia: review.hasMedia,
     gameUrl: review.gameUrl,
     mediaUrl: review.mediaUrl,
+    deliveries: review.deliveries ?? [],
     summary: review.summary,
     lastActivityAt: review.lastActivityAt,
     analyzedAt: review.analyzedAt,

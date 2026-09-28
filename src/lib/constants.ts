@@ -100,6 +100,24 @@ export const TICKET_STATUSES = [
 ] as const;
 export type TicketStatus = (typeof TICKET_STATUSES)[number];
 
+export const TICKET_DELIVERY_KINDS = ["game", "media", "other"] as const;
+export type TicketDeliveryKind = (typeof TICKET_DELIVERY_KINDS)[number];
+
+/** One thing a participant handed in through their ticket. */
+export interface TicketDelivery {
+  url: string;
+  label: string;
+  kind: TicketDeliveryKind;
+  /** ISO timestamp of the message it was posted in. */
+  at: string | null;
+}
+
+export const TICKET_DELIVERY_KIND_LABELS: Record<TicketDeliveryKind, string> = {
+  game: "Juego",
+  media: "Audio/vídeo",
+  other: "Otro",
+};
+
 /** Visual tone shared by `StatusBadge`, calendar blocks and charts. */
 export type Tone =
   | "neutral"

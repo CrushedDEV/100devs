@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
 import {
+  ChevronDown,
   Clapperboard,
   ExternalLink,
   Gamepad2,
@@ -22,8 +24,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  TICKET_DELIVERY_KIND_LABELS,
   TICKET_STATUSES,
   TICKET_STATUS_META,
+  type TicketDelivery,
+  type TicketDeliveryKind,
 } from "@/lib/constants";
 import { formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -157,67 +162,130 @@ function TicketRow({
   review: TicketReviewView;
   guildId: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const meta = TICKET_STATUS_META[review.status];
   const name = review.participant?.name ?? review.channelName;
+  const deliveryCount = review.deliveries.length;
 
   return (
-    <li className="flex flex-col gap-2 border-b border-border/70 bg-card px-3 py-2.5 last:border-b-0 sm:flex-row sm:items-center sm:gap-3">
-      <div className="flex min-w-0 items-center gap-2.5 sm:w-64 sm:shrink-0">
-        <span className="w-6 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-          {review.position}
-        </span>
-        <UserAvatar
-          name={name}
-          avatarUrl={review.participant?.avatarUrl}
-        />
-        <div className="min-w-0">
-          <EngineName
-            engines={review.participant?.engines ?? []}
-            className="block truncate text-sm font-medium"
+    <li className="border-b border-border/70 bg-card last:border-b-0">
+      <div className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex min-w-0 items-center gap-2.5 sm:w-64 sm:shrink-0">
+          <span className="w-6 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+            {review.position}
+          </span>
+          <UserAvatar name={name} avatarUrl={review.participant?.avatarUrl} />
+          <div className="min-w-0">
+            <EngineName
+              engines={review.participant?.engines ?? []}
+              className="block truncate text-sm font-medium"
+            >
+              {name}
+            </EngineName>
+            <p className="truncate text-xs text-muted-foreground">
+              #{review.channelName}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:w-60">
+          <StatusBadge label={meta.label} tone={meta.tone} />
+          <Deliverable
+            done={review.hasGame}
+            url={review.gameUrl}
+            icon={Gamepad2}
+            label="Juego"
+          />
+          <Deliverable
+            done={review.hasMedia}
+            url={review.mediaUrl}
+            icon={Clapperboard}
+            label="Audio/vídeo"
+          />
+        </div>
+
+        <p className="min-w-0 flex-1 text-sm text-muted-foreground sm:line-clamp-2">
+          {review.summary ?? "—"}
+        </p>
+
+        <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
+          <span className="tabular-nums">
+            {review.lastActivityAt
+              ? formatRelative(review.lastActivityAt)
+              : "sin actividad"}
+          </span>
+          {deliveryCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setExpanded((value) => !value)}
+              aria-expanded={expanded}
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              {deliveryCount} {deliveryCount === 1 ? "entrega" : "entregas"}
+              <ChevronDown
+                className={cn(
+                  "size-3 transition-transform",
+                  expanded && "rotate-180",
+                )}
+              />
+            </button>
+          )}
+          <a
+            href={`https://discord.com/channels/${guildId}/${review.channelId}`}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-muted hover:text-foreground"
           >
-            {name}
-          </EngineName>
-          <p className="truncate text-xs text-muted-foreground">
-            #{review.channelName}
-          </p>
+            Abrir
+            <ExternalLink className="size-3" />
+          </a>
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-1.5 sm:w-60">
-        <StatusBadge label={meta.label} tone={meta.tone} />
-        <Deliverable
-          done={review.hasGame}
-          url={review.gameUrl}
-          icon={Gamepad2}
-          label="Juego"
-        />
-        <Deliverable
-          done={review.hasMedia}
-          url={review.mediaUrl}
-          icon={Clapperboard}
-          label="Audio/vídeo"
-        />
-      </div>
-
-      <p className="min-w-0 flex-1 text-sm text-muted-foreground sm:line-clamp-2">
-        {review.summary ?? "—"}
-      </p>
-
-      <div className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
-        <span className="tabular-nums">
-          {review.lastActivityAt ? formatRelative(review.lastActivityAt) : "sin actividad"}
-        </span>
-        <a
-          href={`https://discord.com/channels/${guildId}/${review.channelId}`}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-muted hover:text-foreground"
-        >
-          Abrir
-          <ExternalLink className="size-3" />
-        </a>
-      </div>
+      {expanded && <DeliveryList deliveries={review.deliveries} />}
     </li>
+  );
+}
+
+const KIND_STYLE: Record<TicketDeliveryKind, string> = {
+  game: "border-success/40 bg-success/12 text-success",
+  media: "border-info/40 bg-info/12 text-info",
+  other: "border-border text-muted-foreground",
+};
+
+/** Everything the participant handed in, oldest first. */
+function DeliveryList({ deliveries }: { deliveries: TicketDelivery[] }) {
+  return (
+    <ol className="space-y-1 border-t border-border/60 bg-muted/30 px-3 py-2 sm:pl-[3.25rem]">
+      {deliveries.map((delivery, index) => (
+        <li
+          key={`${delivery.url}-${index}`}
+          className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm"
+        >
+          <span className="w-12 shrink-0 text-xs text-muted-foreground tabular-nums">
+            {delivery.at ? format(new Date(delivery.at), "dd/MM") : "—"}
+          </span>
+          <span
+            className={cn(
+              "inline-flex h-5 shrink-0 items-center rounded-full border px-2 text-[11px] font-medium",
+              KIND_STYLE[delivery.kind],
+            )}
+          >
+            {TICKET_DELIVERY_KIND_LABELS[delivery.kind]}
+          </span>
+          <a
+            href={delivery.url}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex min-w-0 items-center gap-1 hover:underline"
+            title={delivery.url}
+          >
+            <span className="truncate">{delivery.label}</span>
+            <ExternalLink className="size-3 shrink-0 text-muted-foreground" />
+          </a>
+        </li>
+      ))}
+    </ol>
   );
 }
 

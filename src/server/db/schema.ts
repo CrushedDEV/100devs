@@ -27,6 +27,7 @@ import {
   TIMELINE_EVENT_TYPES,
   type EngineKey,
   type SkillRoleMap,
+  type TicketDelivery,
 } from "@/lib/constants";
 
 /* -------------------------------------------------------------------------- */
@@ -448,6 +449,11 @@ export const ticketReviews = pgTable(
     hasMedia: boolean("has_media").notNull().default(false),
     gameUrl: text("game_url"),
     mediaUrl: text("media_url"),
+    /** Everything handed in, in order — including superseded re-uploads. */
+    deliveries: jsonb("deliveries")
+      .$type<TicketDelivery[]>()
+      .notNull()
+      .default([]),
     summary: text("summary"),
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }),
     analyzedAt: timestamp("analyzed_at", { withTimezone: true })

@@ -1,0 +1,1 @@
+ALTER TABLE "ticket_reviews" ADD COLUMN "deliveries" jsonb DEFAULT '[]'::jsonb NOT NULL;

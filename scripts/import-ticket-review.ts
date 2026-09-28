@@ -15,7 +15,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { z } from "zod";
 
-import { TICKET_STATUSES } from "@/lib/constants";
+import { TICKET_DELIVERY_KINDS, TICKET_STATUSES } from "@/lib/constants";
 import * as schema from "@/server/db/schema";
 
 const reviewSchema = z.object({
@@ -33,6 +33,16 @@ const reviewSchema = z.object({
       hasMedia: z.boolean(),
       gameUrl: z.string().nullable().optional(),
       mediaUrl: z.string().nullable().optional(),
+      deliveries: z
+        .array(
+          z.object({
+            url: z.string().url(),
+            label: z.string().min(1),
+            kind: z.enum(TICKET_DELIVERY_KINDS),
+            at: z.string().nullable(),
+          }),
+        )
+        .default([]),
       summary: z.string().nullable().optional(),
       lastActivityAt: z.coerce.date().nullable().optional(),
     }),
@@ -101,6 +111,7 @@ async function main() {
           hasMedia: ticket.hasMedia,
           gameUrl: ticket.gameUrl ?? null,
           mediaUrl: ticket.mediaUrl ?? null,
+          deliveries: ticket.deliveries,
           summary: ticket.summary ?? null,
           lastActivityAt: ticket.lastActivityAt ?? null,
           analyzedAt,
