@@ -86,6 +86,20 @@ export type SyncTrigger = (typeof SYNC_TRIGGERS)[number];
 export const SYNC_STATUSES = ["running", "success", "failed"] as const;
 export type SyncStatus = (typeof SYNC_STATUSES)[number];
 
+/**
+ * Outcome of reviewing a participant's private Discord ticket. "Delivered"
+ * requires both the game build and the audio/video recording.
+ */
+export const TICKET_STATUSES = [
+  "delivered",
+  "partial",
+  "in_progress",
+  "not_started",
+  "needs_attention",
+  "no_access",
+] as const;
+export type TicketStatus = (typeof TICKET_STATUSES)[number];
+
 /** Visual tone shared by `StatusBadge`, calendar blocks and charts. */
 export type Tone =
   | "neutral"
@@ -132,6 +146,15 @@ export const EVENT_STATUS_META: Meta<EventStatus> = {
   live: { label: "En directo", tone: "brand" },
   finished: { label: "Finalizado", tone: "success" },
   archived: { label: "Archivado", tone: "neutral" },
+};
+
+export const TICKET_STATUS_META: Meta<TicketStatus> = {
+  delivered: { label: "Entregado", tone: "success" },
+  partial: { label: "Entrega parcial", tone: "warning" },
+  in_progress: { label: "En curso", tone: "info" },
+  not_started: { label: "Sin empezar", tone: "neutral" },
+  needs_attention: { label: "Requiere atención", tone: "danger" },
+  no_access: { label: "Sin acceso", tone: "neutral" },
 };
 
 export const ROLE_META: Meta<AppRole> = {

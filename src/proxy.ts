@@ -35,5 +35,6 @@ export const config = {
     "/checkpoints/:path*",
     "/stats/:path*",
     "/settings/:path*",
+    "/tickets/:path*",
   ],
 };

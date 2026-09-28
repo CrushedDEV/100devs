@@ -23,6 +23,7 @@ import {
   SYNC_STATUSES,
   SYNC_TRIGGERS,
   TEAM_STATUSES,
+  TICKET_STATUSES,
   TIMELINE_EVENT_TYPES,
   type EngineKey,
   type SkillRoleMap,
@@ -52,6 +53,7 @@ export const reminderKindEnum = pgEnum("reminder_kind", REMINDER_KINDS);
 export const reminderStatusEnum = pgEnum("reminder_status", REMINDER_STATUSES);
 export const syncTriggerEnum = pgEnum("sync_trigger", SYNC_TRIGGERS);
 export const syncStatusEnum = pgEnum("sync_status", SYNC_STATUSES);
+export const ticketStatusEnum = pgEnum("ticket_status", TICKET_STATUSES);
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -413,6 +415,56 @@ export const syncRuns = pgTable(
 );
 
 /* -------------------------------------------------------------------------- */
+/*                               Ticket reviews                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Result of reviewing a participant's private Discord ticket.
+ *
+ * One row per ticket channel. Rows are replaced wholesale on every import, so
+ * this is a snapshot of the latest review rather than a history. `groupIndex`
+ * and `position` preserve the channel order in Discord, which is the turn
+ * order: separators split teams, channel order within a team is the rotation.
+ */
+export const ticketReviews = pgTable(
+  "ticket_reviews",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    channelId: text("channel_id").notNull(),
+    channelName: text("channel_name").notNull(),
+    groupLabel: text("group_label").notNull(),
+    groupIndex: integer("group_index").notNull(),
+    /** Global order across all ticket categories. */
+    position: integer("position").notNull(),
+    participantId: uuid("participant_id").references(() => participants.id, {
+      onDelete: "set null",
+    }),
+    discordUserId: text("discord_user_id"),
+    status: ticketStatusEnum("status").notNull(),
+    hasGame: boolean("has_game").notNull().default(false),
+    hasMedia: boolean("has_media").notNull().default(false),
+    gameUrl: text("game_url"),
+    mediaUrl: text("media_url"),
+    summary: text("summary"),
+    lastActivityAt: timestamp("last_activity_at", { withTimezone: true }),
+    analyzedAt: timestamp("analyzed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("ticket_reviews_event_channel_idx").on(
+      table.eventId,
+      table.channelId,
+    ),
+    index("ticket_reviews_event_position_idx").on(table.eventId, table.position),
+  ],
+);
+
+/* -------------------------------------------------------------------------- */
 /*                                 Relations                                  */
 /* -------------------------------------------------------------------------- */
 
@@ -528,3 +580,5 @@ export type NewCheckpoint = typeof checkpoints.$inferInsert;
 export type TimelineEvent = typeof timelineEvents.$inferSelect;
 export type Reminder = typeof reminders.$inferSelect;
 export type SyncRun = typeof syncRuns.$inferSelect;
+export type TicketReview = typeof ticketReviews.$inferSelect;
+export type NewTicketReview = typeof ticketReviews.$inferInsert;

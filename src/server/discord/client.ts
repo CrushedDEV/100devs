@@ -43,6 +43,51 @@ export interface DiscordRole {
   managed: boolean;
 }
 
+/** Channel types we care about (Discord's `ChannelType` enum). */
+export const CHANNEL_TYPE = { text: 0, category: 4 } as const;
+
+export interface DiscordPermissionOverwrite {
+  id: string;
+  /** 0 = role, 1 = member. */
+  type: number | string;
+  allow: string;
+  deny: string;
+}
+
+export interface DiscordChannel {
+  id: string;
+  type: number;
+  name: string;
+  position: number;
+  parent_id?: string | null;
+  permission_overwrites?: DiscordPermissionOverwrite[];
+}
+
+export interface DiscordAttachment {
+  id: string;
+  filename: string;
+  url: string;
+  content_type?: string;
+  size: number;
+}
+
+export interface DiscordEmbed {
+  type?: string;
+  url?: string;
+  title?: string;
+  description?: string;
+}
+
+export interface DiscordMessage {
+  id: string;
+  type: number;
+  content: string;
+  timestamp: string;
+  author: DiscordUser & { bot?: boolean };
+  attachments: DiscordAttachment[];
+  embeds: DiscordEmbed[];
+}
+
 interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
@@ -151,6 +196,50 @@ export async function tryFetchGuildMember(
 
 export function fetchGuildRoles(guildId: string): Promise<DiscordRole[]> {
   return request<DiscordRole[]>(`/guilds/${guildId}/roles`);
+}
+
+/** Every channel in the guild (threads excluded), in no particular order. */
+export function fetchGuildChannels(guildId: string): Promise<DiscordChannel[]> {
+  return request<DiscordChannel[]>(`/guilds/${guildId}/channels`);
+}
+
+/** The bot's own user, used to ignore its permission overwrites. */
+export function fetchCurrentUser(): Promise<DiscordUser> {
+  return request<DiscordUser>("/users/@me");
+}
+
+/**
+ * Reads a channel's history, oldest first, up to `maxMessages`.
+ *
+ * Needs View Channel + Read Message History on the channel (403 otherwise),
+ * and the *Message Content* privileged intent enabled in the developer portal:
+ * without it Discord returns human messages with an empty `content`.
+ */
+export async function fetchChannelMessages(
+  channelId: string,
+  maxMessages = 400,
+): Promise<DiscordMessage[]> {
+  const messages: DiscordMessage[] = [];
+  let before: string | undefined;
+
+  while (messages.length < maxMessages) {
+    const query = new URLSearchParams({
+      limit: String(Math.min(100, maxMessages - messages.length)),
+    });
+    if (before) query.set("before", before);
+
+    const batch = await request<DiscordMessage[]>(
+      `/channels/${channelId}/messages?${query.toString()}`,
+    );
+
+    messages.push(...batch);
+    if (batch.length < 100) break;
+    before = batch.at(-1)?.id;
+    if (!before) break;
+  }
+
+  // Discord pages newest-first; a conversation reads better chronologically.
+  return messages.reverse();
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   ListChecks,
   Settings,
+  Ticket,
   Users,
   UsersRound,
   type LucideIcon,
@@ -30,6 +31,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/calendar", label: "Calendario", icon: CalendarDays },
       { href: "/timeline", label: "Timeline", icon: GitBranch },
+      { href: "/tickets", label: "Tickets", icon: Ticket },
     ],
   },
   {

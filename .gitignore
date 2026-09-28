@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# ticket exports and reviews contain private participant conversations
+tickets-*.json
+ticket-review*.json
+/.tickets/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
