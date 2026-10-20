@@ -34,6 +34,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
       Discord({
         clientId: env.DISCORD_CLIENT_ID,
         clientSecret: env.DISCORD_CLIENT_SECRET,
+        // Discord now returns `iss` on the OAuth callback (RFC 9207); without
+        // a matching issuer Auth.js compares it to its placeholder and fails.
+        issuer: "https://discord.com",
         authorization:
           "https://discord.com/api/oauth2/authorize?scope=identify+email+guilds",
       }),
