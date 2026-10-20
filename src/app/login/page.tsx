@@ -30,12 +30,24 @@ const ERROR_MESSAGES: Record<string, { title: string; body: string }> = {
     title: "Acceso denegado",
     body: "Discord rechazó la autorización. Vuelve a intentarlo concediendo los permisos solicitados.",
   },
+  BotUnavailable: {
+    title: "El bot de Discord no responde",
+    body: "No se pudo comprobar tu cuenta con el bot. Revisa que DISCORD_BOT_TOKEN en Vercel sea el token actual y que el bot siga en el servidor.",
+  },
+  Configuration: {
+    title: "Error del servidor al iniciar sesión",
+    body: "Algo falló al validar tu cuenta. Revisa los logs de la función en Vercel para ver el detalle.",
+  },
 };
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    status?: string;
+    callbackUrl?: string;
+  }>;
 }) {
   // Checked before `auth()`: initialising Auth.js reads the validated env and
   // would otherwise throw, turning a config mistake into a blank page.
@@ -45,7 +57,7 @@ export default async function LoginPage({
   const session = await auth();
   if (session?.user && isStaffRole(session.user.role)) redirect("/dashboard");
 
-  const { error, callbackUrl } = await searchParams;
+  const { error, status, callbackUrl } = await searchParams;
   const problem = error ? ERROR_MESSAGES[error] : undefined;
 
   return (
@@ -83,6 +95,11 @@ export default async function LoginPage({
                   {problem.title}
                 </p>
                 <p className="text-xs text-destructive/80">{problem.body}</p>
+                {status && status !== "0" && (
+                  <p className="text-xs text-destructive/60 tabular-nums">
+                    Respuesta de Discord: HTTP {status}
+                  </p>
+                )}
               </div>
             </div>
           )}

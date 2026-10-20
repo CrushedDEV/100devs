@@ -6,7 +6,11 @@ import type { AppRole } from "@/lib/constants";
 import { getEnv } from "@/lib/env";
 import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
-import { avatarUrl, tryFetchGuildMember } from "@/server/discord/client";
+import {
+  DiscordApiError,
+  avatarUrl,
+  tryFetchGuildMember,
+} from "@/server/discord/client";
 import { getActiveEvent } from "@/server/services/events";
 
 import { isStaffRole, resolveAppRole } from "./roles";
@@ -15,6 +19,7 @@ import { isStaffRole, resolveAppRole } from "./roles";
 export const AUTH_ERRORS = {
   notMember: "NotGuildMember",
   notStaff: "NotStaff",
+  botUnavailable: "BotUnavailable",
 } as const;
 
 export const { handlers, auth, signIn, signOut } = NextAuth(() => {
@@ -43,10 +48,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
         if (!profile?.id) return false;
 
         const { event, settings } = await getActiveEvent();
-        const member = await tryFetchGuildMember(
-          event.discordGuildId,
-          String(profile.id),
-        );
+
+        // A thrown error here surfaces as the opaque `?error=Configuration`,
+        // so bot failures (revoked token, bot kicked) get their own code.
+        let member: Awaited<ReturnType<typeof tryFetchGuildMember>>;
+        try {
+          member = await tryFetchGuildMember(
+            event.discordGuildId,
+            String(profile.id),
+          );
+        } catch (error) {
+          console.error("[auth] Discord bot lookup failed", error);
+          const status = error instanceof DiscordApiError ? error.status : 0;
+          return `/login?error=${AUTH_ERRORS.botUnavailable}&status=${status}`;
+        }
 
         if (!member) return `/login?error=${AUTH_ERRORS.notMember}`;
 
