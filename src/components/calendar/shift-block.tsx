@@ -1,5 +1,7 @@
 "use client";
 
+import { format, isSameDay } from "date-fns";
+import { es } from "date-fns/locale";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -13,6 +15,9 @@ interface ShiftBlockProps {
   /** Absolute placement inside a week-view day column. */
   style?: React.CSSProperties;
   compact?: boolean;
+  /** The bar is cut by the edge of the visible range on that side. */
+  continuesBefore?: boolean;
+  continuesAfter?: boolean;
   onOpen?: (shift: ShiftView) => void;
 }
 
@@ -20,6 +25,8 @@ export function DraggableShiftBlock({
   shift,
   style,
   compact,
+  continuesBefore,
+  continuesAfter,
   onOpen,
 }: ShiftBlockProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -37,19 +44,35 @@ export function DraggableShiftBlock({
       {...listeners}
       onDoubleClick={() => onOpen?.(shift)}
     >
-      <ShiftBlock shift={shift} compact={compact} />
+      <ShiftBlock
+        shift={shift}
+        compact={compact}
+        continuesBefore={continuesBefore}
+        continuesAfter={continuesAfter}
+      />
     </div>
   );
+}
+
+/** "lun 10 00:00 → mar 11 23:59" for multi-day turns, plain times otherwise. */
+function formatShiftRange(start: Date, end: Date): string {
+  if (isSameDay(start, end)) return `${formatTime(start)} – ${formatTime(end)}`;
+  const pattern = "EEE d HH:mm";
+  return `${format(start, pattern, { locale: es })} → ${format(end, pattern, { locale: es })}`;
 }
 
 export function ShiftBlock({
   shift,
   compact = false,
   overlay = false,
+  continuesBefore = false,
+  continuesAfter = false,
 }: {
   shift: ShiftView;
   compact?: boolean;
   overlay?: boolean;
+  continuesBefore?: boolean;
+  continuesAfter?: boolean;
 }) {
   const meta = SHIFT_STATUS_META[shift.status];
   const muted = shift.status === "cancelled";
@@ -60,6 +83,8 @@ export function ShiftBlock({
         "h-full cursor-grab overflow-hidden rounded-md border-l-2 px-1.5 py-1 text-left transition-shadow select-none active:cursor-grabbing",
         overlay ? "shadow-xl" : "hover:shadow-md",
         muted && "opacity-50",
+        continuesBefore && "rounded-l-none border-l-0 border-dashed",
+        continuesAfter && "rounded-r-none",
       )}
       style={{
         borderLeftColor: shift.teamColor,
@@ -68,7 +93,9 @@ export function ShiftBlock({
       title={`${shift.teamName} · ${shift.participantName ?? "Sin asignar"} · ${meta.label}`}
     >
       <p className="truncate text-[11px] leading-tight font-medium">
+        {continuesBefore && "← "}
         {shift.participantName ?? "Sin asignar"}
+        {continuesAfter && " →"}
       </p>
       {!compact && (
         <>
@@ -76,7 +103,7 @@ export function ShiftBlock({
             {shift.teamName}
           </p>
           <p className="truncate text-[10px] leading-tight tabular-nums text-muted-foreground">
-            {formatTime(shift.startsAt)} – {formatTime(shift.endsAt)}
+            {formatShiftRange(shift.startsAt, shift.endsAt)}
           </p>
         </>
       )}

@@ -1,5 +1,7 @@
 import {
   addDays,
+  addMinutes,
+  differenceInCalendarDays,
   differenceInMinutes,
   endOfMonth,
   endOfWeek,
@@ -59,4 +61,33 @@ export function minutesFromMidnight(date: Date): number {
 
 export function shiftDurationMinutes(start: Date, end: Date): number {
   return Math.max(15, differenceInMinutes(end, start));
+}
+
+/**
+ * Turns of a day or more (the usual 48 h rotation) don't fit an hour grid:
+ * they go in the week view's all-day band instead.
+ */
+export function isMultiDayShift(start: Date, end: Date): boolean {
+  return differenceInMinutes(end, start) >= 20 * 60;
+}
+
+export function overlapsRange(
+  shift: { startsAt: Date; endsAt: Date },
+  start: Date,
+  end: Date,
+): boolean {
+  return shift.startsAt <= end && shift.endsAt >= start;
+}
+
+/** Calendar days covered by a shift, as whole days from `origin`. */
+export function shiftDaySpan(
+  shift: { startsAt: Date; endsAt: Date },
+  origin: Date,
+): { first: number; last: number } {
+  // An end at exactly midnight belongs to the previous day.
+  const end = addMinutes(shift.endsAt, -1);
+  return {
+    first: differenceInCalendarDays(shift.startsAt, origin),
+    last: differenceInCalendarDays(end < shift.startsAt ? shift.startsAt : end, origin),
+  };
 }

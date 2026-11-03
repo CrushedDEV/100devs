@@ -1,14 +1,21 @@
 "use client";
 
-import { format, isSameDay, isSameMonth, isToday } from "date-fns";
+import {
+  endOfDay,
+  format,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  startOfDay,
+} from "date-fns";
 import { es } from "date-fns/locale";
 import { useDroppable } from "@dnd-kit/core";
 
 import { cn } from "@/lib/utils";
 import type { ShiftView } from "@/server/services/shifts";
 
-import { buildSlotId } from "./calendar-utils";
-import { DraggableShiftBlock } from "./shift-block";
+import { buildSlotId, overlapsRange } from "./calendar-utils";
+import { DraggableShiftBlock, ShiftBlock } from "./shift-block";
 
 interface MonthViewProps {
   days: Date[];
@@ -35,12 +42,15 @@ export function MonthView({ days, anchor, shifts, onOpen }: MonthViewProps) {
       </div>
 
       <div className="grid grid-cols-7">
-        {days.map((day) => (
+        {days.map((day, index) => (
           <DayCell
             key={day.toISOString()}
             day={day}
+            isFirstVisibleDay={index === 0}
             outside={!isSameMonth(day, anchor)}
-            shifts={shifts.filter((shift) => isSameDay(shift.startsAt, day))}
+            shifts={shifts.filter((shift) =>
+              overlapsRange(shift, startOfDay(day), endOfDay(day)),
+            )}
             onOpen={onOpen}
           />
         ))}
@@ -51,16 +61,18 @@ export function MonthView({ days, anchor, shifts, onOpen }: MonthViewProps) {
 
 function DayCell({
   day,
+  isFirstVisibleDay,
   outside,
   shifts,
   onOpen,
 }: {
   day: Date;
+  isFirstVisibleDay: boolean;
   outside: boolean;
   shifts: ShiftView[];
   onOpen?: (shift: ShiftView) => void;
 }) {
-  // Hour 0 acts as "keep the original time" — the drop handler preserves it.
+  // Hour -1 acts as "keep the original time" — the drop handler preserves it.
   const { setNodeRef, isOver } = useDroppable({ id: buildSlotId(day, -1) });
 
   const visible = shifts.slice(0, 3);
@@ -95,15 +107,25 @@ function DayCell({
         )}
       </div>
 
-      {visible.map((shift) => (
-        <DraggableShiftBlock
-          key={shift.id}
-          shift={shift}
-          compact
-          onOpen={onOpen}
-          style={{ height: 22 }}
-        />
-      ))}
+      {visible.map((shift) => {
+        // A multi-day turn appears on every day it covers, but only the day it
+        // starts on (or the first day shown) carries the draggable copy.
+        const isStart = isSameDay(shift.startsAt, day) || isFirstVisibleDay;
+
+        return isStart ? (
+          <DraggableShiftBlock
+            key={shift.id}
+            shift={shift}
+            compact
+            onOpen={onOpen}
+            style={{ height: 22 }}
+          />
+        ) : (
+          <div key={shift.id} style={{ height: 22 }} onDoubleClick={() => onOpen?.(shift)}>
+            <ShiftBlock shift={shift} compact continuesBefore />
+          </div>
+        );
+      })}
 
       {hidden > 0 && (
         <p className="px-0.5 text-[10px] text-muted-foreground">

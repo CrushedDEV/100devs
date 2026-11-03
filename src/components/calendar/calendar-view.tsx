@@ -38,6 +38,7 @@ import type { ShiftView } from "@/server/services/shifts";
 import {
   daysBetween,
   monthRange,
+  overlapsRange,
   parseSlotId,
   shiftDurationMinutes,
   weekRange,
@@ -79,7 +80,8 @@ export function CalendarView({ shifts, teams }: CalendarViewProps) {
       .map((shift) => optimistic[shift.id] ?? shift)
       .filter((shift) => {
         if (teamFilter !== ALL_TEAMS && shift.teamId !== teamFilter) return false;
-        return shift.startsAt >= range.start && shift.startsAt <= range.end;
+        // Overlap, not start: a 48 h turn that began last week is still on.
+        return overlapsRange(shift, range.start, range.end);
       });
   }, [shifts, optimistic, teamFilter, range.start, range.end]);
 
