@@ -63,14 +63,6 @@ export function shiftDurationMinutes(start: Date, end: Date): number {
   return Math.max(15, differenceInMinutes(end, start));
 }
 
-/**
- * Turns of a day or more (the usual 48 h rotation) don't fit an hour grid:
- * they go in the week view's all-day band instead.
- */
-export function isMultiDayShift(start: Date, end: Date): boolean {
-  return differenceInMinutes(end, start) >= 20 * 60;
-}
-
 export function overlapsRange(
   shift: { startsAt: Date; endsAt: Date },
   start: Date,

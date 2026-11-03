@@ -54,10 +54,10 @@ export function DraggableShiftBlock({
   );
 }
 
-/** "lun 10 00:00 → mar 11 23:59" for multi-day turns, plain times otherwise. */
+/** "mar 10 · 00:00 → mié 11 · 23:59" for multi-day turns, plain times otherwise. */
 function formatShiftRange(start: Date, end: Date): string {
   if (isSameDay(start, end)) return `${formatTime(start)} – ${formatTime(end)}`;
-  const pattern = "EEE d HH:mm";
+  const pattern = "EEE d · HH:mm";
   return `${format(start, pattern, { locale: es })} → ${format(end, pattern, { locale: es })}`;
 }
 
@@ -80,7 +80,8 @@ export function ShiftBlock({
   return (
     <article
       className={cn(
-        "h-full cursor-grab overflow-hidden rounded-md border-l-2 px-1.5 py-1 text-left transition-shadow select-none active:cursor-grabbing",
+        "h-full cursor-grab overflow-hidden rounded-md border-l-2 text-left transition-shadow select-none active:cursor-grabbing",
+        compact ? "px-1.5 py-1" : "px-2 py-1.5",
         overlay ? "shadow-xl" : "hover:shadow-md",
         muted && "opacity-50",
         continuesBefore && "rounded-l-none border-l-0 border-dashed",
@@ -92,17 +93,22 @@ export function ShiftBlock({
       }}
       title={`${shift.teamName} · ${shift.participantName ?? "Sin asignar"} · ${meta.label}`}
     >
-      <p className="truncate text-[11px] leading-tight font-medium">
+      <p
+        className={cn(
+          "truncate font-medium",
+          compact ? "text-[11px] leading-tight" : "text-xs leading-4",
+        )}
+      >
         {continuesBefore && "← "}
         {shift.participantName ?? "Sin asignar"}
         {continuesAfter && " →"}
       </p>
       {!compact && (
         <>
-          <p className="truncate text-[10px] leading-tight text-muted-foreground">
+          <p className="truncate text-[11px] leading-4 text-muted-foreground">
             {shift.teamName}
           </p>
-          <p className="truncate text-[10px] leading-tight tabular-nums text-muted-foreground">
+          <p className="truncate text-[11px] leading-4 tabular-nums text-muted-foreground">
             {formatShiftRange(shift.startsAt, shift.endsAt)}
           </p>
         </>

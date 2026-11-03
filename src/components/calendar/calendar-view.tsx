@@ -240,8 +240,8 @@ export function CalendarView({ shifts, teams }: CalendarViewProps) {
       </DndContext>
 
       <p className="text-xs text-muted-foreground">
-        Arrastra un turno para reprogramarlo. En la vista mensual se conserva la
-        hora original; en la semanal se ajusta a la franja de destino.
+        Arrastra un turno a otro día para reprogramarlo; conserva su hora y su
+        duración.
       </p>
     </div>
   );
