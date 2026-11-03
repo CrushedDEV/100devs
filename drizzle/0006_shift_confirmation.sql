@@ -1,0 +1,2 @@
+CREATE TYPE "public"."shift_confirmation" AS ENUM('pending', 'confirmed', 'declined');--> statement-breakpoint
+ALTER TABLE "shifts" ADD COLUMN "confirmation" "shift_confirmation" DEFAULT 'pending' NOT NULL;

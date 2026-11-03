@@ -31,7 +31,7 @@ export default async function CalendarPage() {
     <>
       <PageHeader
         title="Calendario"
-        description="Organiza los turnos arrastrándolos. Vista semanal por franjas horarias y vista mensual para la planificación global."
+        description="Organiza los turnos arrastrándolos y marca si cada participante ha confirmado sus fechas."
       >
         <ShiftFormDialog
           teams={teams.map((team) => ({ id: team.id, label: team.name }))}

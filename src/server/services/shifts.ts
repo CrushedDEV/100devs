@@ -3,7 +3,11 @@ import "server-only";
 import { addMinutes } from "date-fns";
 import { and, asc, eq, gte, lte, sql, type SQL } from "drizzle-orm";
 
-import { DELAY_GRACE_MINUTES, type ShiftStatus } from "@/lib/constants";
+import {
+  DELAY_GRACE_MINUTES,
+  type ShiftConfirmation,
+  type ShiftStatus,
+} from "@/lib/constants";
 import { db } from "@/server/db";
 import { participants, shifts, teams, users, type Shift } from "@/server/db/schema";
 
@@ -21,6 +25,7 @@ export interface ShiftView {
   actualStartAt: Date | null;
   actualEndAt: Date | null;
   status: ShiftStatus;
+  confirmation: ShiftConfirmation;
   orderIndex: number;
   notes: string | null;
 }
@@ -41,6 +46,7 @@ const selection = {
   actualStartAt: shifts.actualStartAt,
   actualEndAt: shifts.actualEndAt,
   status: shifts.status,
+  confirmation: shifts.confirmation,
   orderIndex: shifts.orderIndex,
   notes: shifts.notes,
 };
@@ -61,6 +67,7 @@ interface ShiftRow {
   actualStartAt: Date | null;
   actualEndAt: Date | null;
   status: ShiftStatus;
+  confirmation: ShiftConfirmation;
   orderIndex: number;
   notes: string | null;
 }
@@ -85,6 +92,7 @@ function toView(row: ShiftRow): ShiftView {
     actualStartAt: row.actualStartAt,
     actualEndAt: row.actualEndAt,
     status: row.status,
+    confirmation: row.confirmation,
     orderIndex: row.orderIndex,
     notes: row.notes,
   };
@@ -183,6 +191,7 @@ export async function updateShift(
       | "startsAt"
       | "endsAt"
       | "status"
+      | "confirmation"
       | "notes"
       | "actualStartAt"
       | "actualEndAt"

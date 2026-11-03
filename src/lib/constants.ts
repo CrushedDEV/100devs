@@ -25,6 +25,10 @@ export const SHIFT_STATUSES = [
 ] as const;
 export type ShiftStatus = (typeof SHIFT_STATUSES)[number];
 
+/** Whether the participant has agreed to the turn's dates. */
+export const SHIFT_CONFIRMATIONS = ["pending", "confirmed", "declined"] as const;
+export type ShiftConfirmation = (typeof SHIFT_CONFIRMATIONS)[number];
+
 export const CHECKPOINT_STATUSES = [
   "pending",
   "submitted",
@@ -136,6 +140,12 @@ export const SHIFT_STATUS_META: Meta<ShiftStatus> = {
   delayed: { label: "Con retraso", tone: "warning" },
   missed: { label: "No entregado", tone: "danger" },
   cancelled: { label: "Cancelado", tone: "neutral" },
+};
+
+export const SHIFT_CONFIRMATION_META: Meta<ShiftConfirmation> = {
+  pending: { label: "Por confirmar", tone: "warning" },
+  confirmed: { label: "Confirmado", tone: "success" },
+  declined: { label: "No puede", tone: "danger" },
 };
 
 export const CHECKPOINT_STATUS_META: Meta<CheckpointStatus> = {

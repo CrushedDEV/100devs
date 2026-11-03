@@ -32,7 +32,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { rescheduleShiftAction } from "@/server/actions/shifts";
+import {
+  rescheduleShiftAction,
+  setShiftConfirmationAction,
+} from "@/server/actions/shifts";
+import type { ShiftConfirmation } from "@/lib/constants";
 import type { ShiftView } from "@/server/services/shifts";
 
 import {
@@ -143,6 +147,39 @@ export function CalendarView({ shifts, teams }: CalendarViewProps) {
     });
   };
 
+  const changeConfirmation = (
+    shift: ShiftView,
+    confirmation: ShiftConfirmation,
+  ) => {
+    if (shift.confirmation === confirmation) return;
+
+    setOptimistic((current) => ({
+      ...current,
+      [shift.id]: { ...shift, confirmation },
+    }));
+
+    startTransition(async () => {
+      const result = await setShiftConfirmationAction({
+        id: shift.id,
+        confirmation,
+      });
+
+      if (result.ok) {
+        toast.success(result.message, {
+          description: shift.participantName ?? undefined,
+        });
+      } else {
+        toast.error(result.message ?? "No se pudo actualizar");
+        setOptimistic((current) => {
+          const next = { ...current };
+          delete next[shift.id];
+          return next;
+        });
+      }
+      router.refresh();
+    });
+  };
+
   const step = (direction: 1 | -1) => {
     setAnchor((current) =>
       mode === "week"
@@ -225,9 +262,18 @@ export function CalendarView({ shifts, teams }: CalendarViewProps) {
         onDragEnd={onDragEnd}
       >
         {mode === "week" ? (
-          <WeekView days={days} shifts={visibleShifts} />
+          <WeekView
+            days={days}
+            shifts={visibleShifts}
+            onConfirmationChange={changeConfirmation}
+          />
         ) : (
-          <MonthView days={days} anchor={anchor} shifts={visibleShifts} />
+          <MonthView
+            days={days}
+            anchor={anchor}
+            shifts={visibleShifts}
+            onConfirmationChange={changeConfirmation}
+          />
         )}
 
         <DragOverlay dropAnimation={null}>

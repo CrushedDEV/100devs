@@ -19,6 +19,7 @@ import {
   PARTICIPANT_STATUSES,
   REMINDER_KINDS,
   REMINDER_STATUSES,
+  SHIFT_CONFIRMATIONS,
   SHIFT_STATUSES,
   SYNC_STATUSES,
   SYNC_TRIGGERS,
@@ -42,6 +43,10 @@ export const participantStatusEnum = pgEnum(
   PARTICIPANT_STATUSES,
 );
 export const shiftStatusEnum = pgEnum("shift_status", SHIFT_STATUSES);
+export const shiftConfirmationEnum = pgEnum(
+  "shift_confirmation",
+  SHIFT_CONFIRMATIONS,
+);
 export const checkpointStatusEnum = pgEnum(
   "checkpoint_status",
   CHECKPOINT_STATUSES,
@@ -257,6 +262,10 @@ export const shifts = pgTable(
     actualStartAt: timestamp("actual_start_at", { withTimezone: true }),
     actualEndAt: timestamp("actual_end_at", { withTimezone: true }),
     status: shiftStatusEnum("status").notNull().default("scheduled"),
+    /** Dates are proposed first; the participant confirms or declines them. */
+    confirmation: shiftConfirmationEnum("confirmation")
+      .notNull()
+      .default("pending"),
     orderIndex: integer("order_index").notNull().default(0),
     notes: text("notes"),
     ...timestamps,

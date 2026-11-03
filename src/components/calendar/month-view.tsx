@@ -15,19 +15,30 @@ import { cn } from "@/lib/utils";
 import type { ShiftView } from "@/server/services/shifts";
 
 import { buildSlotId, overlapsRange } from "./calendar-utils";
-import { DraggableShiftBlock, ShiftBlock } from "./shift-block";
+import {
+  DraggableShiftBlock,
+  ShiftBlock,
+  type ConfirmationChangeHandler,
+} from "./shift-block";
 
 interface MonthViewProps {
   days: Date[];
   anchor: Date;
   shifts: ShiftView[];
   onOpen?: (shift: ShiftView) => void;
+  onConfirmationChange?: ConfirmationChangeHandler;
 }
 
 const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
 
 /** Month grid. Dropping onto a day keeps the shift's original time of day. */
-export function MonthView({ days, anchor, shifts, onOpen }: MonthViewProps) {
+export function MonthView({
+  days,
+  anchor,
+  shifts,
+  onOpen,
+  onConfirmationChange,
+}: MonthViewProps) {
   return (
     <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
       <div className="grid grid-cols-7 border-b border-border bg-card/95">
@@ -52,6 +63,7 @@ export function MonthView({ days, anchor, shifts, onOpen }: MonthViewProps) {
               overlapsRange(shift, startOfDay(day), endOfDay(day)),
             )}
             onOpen={onOpen}
+            onConfirmationChange={onConfirmationChange}
           />
         ))}
       </div>
@@ -65,12 +77,14 @@ function DayCell({
   outside,
   shifts,
   onOpen,
+  onConfirmationChange,
 }: {
   day: Date;
   isFirstVisibleDay: boolean;
   outside: boolean;
   shifts: ShiftView[];
   onOpen?: (shift: ShiftView) => void;
+  onConfirmationChange?: ConfirmationChangeHandler;
 }) {
   // Hour -1 acts as "keep the original time" — the drop handler preserves it.
   const { setNodeRef, isOver } = useDroppable({ id: buildSlotId(day, -1) });
@@ -118,11 +132,17 @@ function DayCell({
             shift={shift}
             compact
             onOpen={onOpen}
+            onConfirmationChange={onConfirmationChange}
             style={{ height: 22 }}
           />
         ) : (
           <div key={shift.id} style={{ height: 22 }} onDoubleClick={() => onOpen?.(shift)}>
-            <ShiftBlock shift={shift} compact continuesBefore />
+            <ShiftBlock
+              shift={shift}
+              compact
+              continuesBefore
+              onConfirmationChange={onConfirmationChange}
+            />
           </div>
         );
       })}

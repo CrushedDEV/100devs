@@ -43,6 +43,13 @@
       "when": 1790608246660,
       "tag": "0005_ticket_deliveries",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793726908351,
+      "tag": "0006_shift_confirmation",
+      "breakpoints": true
     }
   ]
 }

@@ -3,10 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import {
+  SHIFT_CONFIRMATION_META,
+  type ShiftConfirmation,
+} from "@/lib/constants";
 import { formatRange } from "@/lib/format";
 import {
   generateShiftsSchema,
   rescheduleShiftSchema,
+  shiftConfirmationSchema,
   shiftInputSchema,
   shiftUpdateSchema,
 } from "@/lib/validators";
@@ -140,6 +145,24 @@ export async function rescheduleShiftAction(input: {
 
     revalidateShiftViews(shift.teamId);
     return ok(undefined, "Turno reprogramado.");
+  });
+}
+
+/** Marks whether the participant agreed to the proposed dates. */
+export async function setShiftConfirmationAction(input: {
+  id: string;
+  confirmation: ShiftConfirmation;
+}): Promise<ActionState> {
+  return runAction(shiftConfirmationSchema, input, async (values, context) => {
+    const before = await getShift(context.event.id, values.id);
+    if (!before) return fail("No se encontró el turno.");
+
+    const shift = await updateShift(context.event.id, values.id, {
+      confirmation: values.confirmation,
+    });
+
+    revalidateShiftViews(shift.teamId);
+    return ok(undefined, SHIFT_CONFIRMATION_META[values.confirmation].label);
   });
 }
 

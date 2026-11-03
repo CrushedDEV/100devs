@@ -5,6 +5,7 @@ import {
   ENGINE_KEYS,
   EVENT_STATUSES,
   PARTICIPANT_STATUSES,
+  SHIFT_CONFIRMATIONS,
   SHIFT_STATUSES,
   SKILL_KEYS,
   TEAM_STATUSES,
@@ -124,6 +125,11 @@ export const rescheduleShiftSchema = z.object({
   endsAt: z.coerce.date(),
   teamId: uuid.optional(),
   participantId: uuid.nullable().optional(),
+});
+
+export const shiftConfirmationSchema = z.object({
+  id: uuid,
+  confirmation: z.enum(SHIFT_CONFIRMATIONS),
 });
 
 export const generateShiftsSchema = z.object({

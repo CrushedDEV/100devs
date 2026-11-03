@@ -8,7 +8,10 @@ import { cn } from "@/lib/utils";
 import type { ShiftView } from "@/server/services/shifts";
 
 import { buildSlotId, shiftDaySpan } from "./calendar-utils";
-import { DraggableShiftBlock } from "./shift-block";
+import {
+  DraggableShiftBlock,
+  type ConfirmationChangeHandler,
+} from "./shift-block";
 
 const LANE_HEIGHT = 64;
 const MIN_LANES = 6;
@@ -17,6 +20,7 @@ interface WeekViewProps {
   days: Date[];
   shifts: ShiftView[];
   onOpen?: (shift: ShiftView) => void;
+  onConfirmationChange?: ConfirmationChangeHandler;
 }
 
 /**
@@ -24,7 +28,12 @@ interface WeekViewProps {
  * each turn is a bar spanning its days, stacked in lanes so overlapping turns
  * (one per team) never cover each other. The times live inside the bar.
  */
-export function WeekView({ days, shifts, onOpen }: WeekViewProps) {
+export function WeekView({
+  days,
+  shifts,
+  onOpen,
+  onConfirmationChange,
+}: WeekViewProps) {
   const lastColumn = days.length - 1;
   const laneEnds: number[] = [];
 
@@ -106,6 +115,7 @@ export function WeekView({ days, shifts, onOpen }: WeekViewProps) {
                 <DraggableShiftBlock
                   shift={shift}
                   onOpen={onOpen}
+                  onConfirmationChange={onConfirmationChange}
                   style={{ height: "100%" }}
                   continuesBefore={continuesBefore}
                   continuesAfter={continuesAfter}
